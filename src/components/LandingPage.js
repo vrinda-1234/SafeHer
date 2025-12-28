@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import logo from "../assests/logo.png";
+import { Link } from "react-router-dom";
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -49,12 +50,18 @@ function App() {
 
           {/* Action Buttons */}
           <div className="hidden md:flex space-x-3">
-            <button className="px-5 py-2.5 border-2 border-pink-500 text-gray-700 rounded-xl hover:text-white hover:bg-gradient-to-r hover:from-pink-500 hover:to-rose-500 transition">
-              Login
-            </button>
-            <button className="px-6 py-2.5 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl shadow-lg">
-              Get SafeHer
-            </button>
+          <Link to="/login">
+  <button className="px-5 py-2.5 border-2 border-pink-500 text-gray-700 rounded-xl hover:text-white hover:bg-gradient-to-r hover:from-pink-500 hover:to-rose-500 transition">
+    Login
+  </button>
+</Link>
+
+<Link to="/signup">
+  <button className="px-6 py-2.5 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl shadow-lg hover:scale-105 transition">
+    Get SafeHer
+  </button>
+</Link>
+
           </div>
         </div>
       </header>
