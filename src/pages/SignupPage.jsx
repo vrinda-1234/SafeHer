@@ -1,41 +1,13 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import logo from "../assests/logo.png";
+import { useNavigate } from "react-router-dom";
+import AuthLayout from "../components/AuthLayout";
 
-const AuthLayout = ({ title, subtitle, children }) => {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-purple-50 px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 relative">
-
-        {/* Logo */}
-        <div className="flex justify-center mb-6">
-          <img src={logo} alt="SafeHer Logo" className="h-28 w-auto" />
-        </div>
-
-        {/* Heading */}
-        <h2 className="text-3xl font-bold text-purple-900 text-center mb-2">
-          {title}
-        </h2>
-        <p className="text-gray-600 text-center mb-6">
-          {subtitle}
-        </p>
-
-        {/* Form */}
-        {children}
-
-        {/* Trust Note */}
-        <p className="text-xs text-gray-500 text-center mt-6">
-          🔒 Your data is encrypted & never shared
-        </p>
-      </div>
-    </div>
-  );
-};
-
-const InputField = ({ type = "text", placeholder, value, onChange }) => {
+const InputField = ({ type = "text", placeholder, value, onChange,name }) => {
     return (
       <input
         type={type}
+        name={name}  
         placeholder={placeholder}
         value={value}
         onChange={onChange}
@@ -44,9 +16,10 @@ const InputField = ({ type = "text", placeholder, value, onChange }) => {
       />
     );
   };
- 
+
 
 const Signup = () => {
+  const navigate=useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -62,6 +35,7 @@ const Signup = () => {
   };
 
   const handleSubmit = (e) => {
+    
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
@@ -71,6 +45,8 @@ const Signup = () => {
 
     console.log("Signup Data:", formData);
     // 🔗 Backend API call will go here
+    localStorage.setItem("isLoggedIn", "true");
+    navigate("/dashboard");
   };
 
   return (
