@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import logo from "../assests/logo.png";
 import { Link } from "react-router-dom";
 function App() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
+ 
   // Smooth scroll for internal links
   useEffect(() => {
     const handleSmoothScroll = (e) => {
