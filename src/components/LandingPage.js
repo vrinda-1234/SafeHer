@@ -25,7 +25,7 @@ function App() {
     <div className="font-sans scroll-smooth">
 
       {/* NAVBAR */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-lg shadow border-b border-gray-100">
+      <header className="fixed top-0 left-0 right-0 z-50 shadow-sm ">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center space-x-3">
@@ -67,76 +67,158 @@ function App() {
       </header>
 
       {/* HERO / HOME */}
-      <section id="home" className="bg-purple-50 min-h-screen flex flex-col justify-center items-center text-center px-4 pt-32">
-        <h1 className="text-5xl font-bold text-purple-900 mb-4">
-          Your Safety, Our Priority
-        </h1>
-        <p className="text-xl text-purple-700 mb-8 max-w-xl">
-          SafeHer uses AI and real-time monitoring to detect distress and alert help before danger escalates.
-        </p>
-        <div className="flex gap-4">
-          <button className="bg-purple-700 text-white px-6 py-3 rounded-lg hover:bg-purple-800 transition">
-            Get Started
-          </button>
-          <a href="#how-it-works" className="bg-white border border-purple-700 text-purple-700 px-6 py-3 rounded-lg hover:bg-purple-100 transition">
-            How It Works
-          </a>
-        </div>
-      </section>
+<section
+  id="home"
+  className="relative min-h-screen flex flex-col justify-center items-center text-center px-4 pt-32 overflow-hidden
+             bg-gradient-to-br from-purple-800 via-pink-300 to-pink-600"
+>
+
+
+
+  {/* MAIN CONTENT */}
+  <h1 className="text-5xl font-bold text-white mb-4 relative z-10">
+    Your Safety, Our Priority
+  </h1>
+
+  <p className="text-xl text-pink-100 mb-8 max-w-xl relative z-10">
+    SafeHer uses AI and real-time monitoring to detect distress and alert help
+    before danger escalates.
+  </p>
+
+  <div className="flex gap-4 relative z-10">
+    <button className="bg-white text-pink-600 px-6 py-3 rounded-lg font-semibold
+                       hover:scale-105 transition shadow-lg">
+      Get Started
+    </button>
+
+    <a
+      href="#how-it-works"
+      className="border border-white text-white px-6 py-3 rounded-lg
+                 hover:bg-white hover:text-pink-600 transition"
+    >
+      How It Works
+    </a>
+  </div>
+</section>
+
 
       {/* PROBLEM */}
-      <section className="bg-white py-20 px-4 text-center">
-        <h2 className="text-4xl font-bold text-purple-900 mb-6">The Problem</h2>
-        <p className="text-lg text-gray-700 max-w-2xl mx-auto">
-          Women face fear in everyday situations — walking home late, isolated areas, or emergencies where asking for help isn’t possible.
-        </p>
-      </section>
+    <section className="relative py-24 px-6 bg-gradient-to-br from-rose-50 via-white to-violet-50 overflow-hidden">
+
+  {/* Decorative blurred shapes */}
+  <div className="absolute top-10 left-10 w-40 h-40 bg-pink-300/30 rounded-full blur-3xl"></div>
+  <div className="absolute bottom-10 right-10 w-48 h-48 bg-purple-400/30 rounded-full blur-3xl"></div>
+
+  <div className="relative max-w-4xl mx-auto text-center">
+    
+    {/* Small label */}
+    <span className="inline-block mb-4 px-4 py-1 rounded-full bg-rose-100 text-rose-600 text-sm font-semibold tracking-wide">
+      THE REALITY
+    </span>
+
+    {/* Heading */}
+    <h2 className="text-4xl md:text-5xl font-extrabold text-purple-900 mb-6 leading-tight">
+      Safety Isn’t Guaranteed.  
+      <span className="text-pink-500"> That’s the Problem.</span>
+    </h2>
+  </div>
+</section>
+
 
       {/* SOLUTION */}
-      <section className="bg-purple-50 py-20 px-4 text-center">
-        <h2 className="text-4xl font-bold text-purple-900 mb-12">Our Solution</h2>
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
-            <h3 className="text-xl font-semibold mb-2">AI-Powered Detection</h3>
-            <p>Detects shouting, running, and abnormal patterns automatically to act fast in emergencies.</p>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
-            <h3 className="text-xl font-semibold mb-2">Smart Location Tracking</h3>
-            <p>Monitors your route and movement, sending alerts when unusual activity is detected.</p>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
-            <h3 className="text-xl font-semibold mb-2">Instant Alerts</h3>
-            <p>Notifies trusted contacts or authorities automatically — no manual action needed.</p>
-          </div>
-        </div>
-      </section>
+    <section
+  id="solution"
+  className="relative py-28 px-6 bg-gradient-to-br from-violet-50 via-white to-rose-50 overflow-hidden"
+>
+  {/* Background glow */}
+  <div className="absolute -top-20 -left-20 w-72 h-72 bg-pink-300/30 rounded-full blur-3xl"></div>
+  <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-purple-400/30 rounded-full blur-3xl"></div>
+
+  <div className="relative max-w-7xl mx-auto text-center">
+
+    {/* Tag */}
+    <span className="inline-block mb-4 px-4 py-1 rounded-full bg-purple-100 text-purple-700 text-sm font-semibold tracking-wide">
+      HOW SAFEHER PROTECTS YOU
+    </span>
+
+    {/* Heading */}
+    <h2 className="text-4xl md:text-5xl font-extrabold text-purple-900 mb-6">
+      A Smarter, Faster Way  
+      <span className="text-pink-500"> To Stay Safe</span>
+    </h2>
+
+    <p className="text-lg text-slate-600 max-w-2xl mx-auto mb-16">
+      SafeHer combines AI, real-time data, and intelligent decision-making
+      to protect you — even when you can’t react.
+    </p>
+
+    {/* Cards */}
+    <div className="grid md:grid-cols-3 gap-10">
+
+      {/* Card 1 */}
+      <div className="group relative bg-white rounded-2xl p-8 shadow-xl border border-slate-200
+                      hover:-translate-y-2 transition-all duration-300">
+
+        <h3 className="text-xl font-semibold text-purple-900 mb-3">
+          AI-Powered Detection
+        </h3>
+
+        <p className="text-slate-600 leading-relaxed">
+          Automatically detects distress signals like shouting, sudden
+          movements, or abnormal patterns in real time.
+        </p>
+
+        <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100
+                        transition pointer-events-none
+                        ring-2 ring-pink-400/40"></div>
+      </div>
+
+      {/* Card 2 */}
+      <div className="group relative bg-white rounded-2xl p-8 shadow-xl border border-slate-200
+                      hover:-translate-y-2 transition-all duration-300">
+        <h3 className="text-xl font-semibold text-purple-900 mb-3">
+          Smart Location Tracking
+        </h3>
+
+        <p className="text-slate-600 leading-relaxed">
+          Continuously monitors your route and movement patterns to
+          identify unusual or risky behavior instantly.
+        </p>
+
+        <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100
+                        transition pointer-events-none
+                        ring-2 ring-purple-400/40"></div>
+      </div>
+
+      {/* Card 3 */}
+      <div className="group relative bg-white rounded-2xl p-8 shadow-xl border border-slate-200
+                      hover:-translate-y-2 transition-all duration-300">
+
+        <h3 className="text-xl font-semibold text-purple-900 mb-3">
+          Instant Alerts
+        </h3>
+
+        <p className="text-slate-600 leading-relaxed">
+          Sends automatic alerts to trusted contacts or authorities
+          without requiring any manual action.
+        </p>
+
+        <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100
+                        transition pointer-events-none
+                        ring-2 ring-rose-400/40"></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
 
       {/* HOW IT WORKS */}
-      <section id="how-it-works" className="bg-white py-20 px-4 text-center">
-        <h2 className="text-4xl font-bold text-purple-900 mb-12">How It Works</h2>
-        <div className="grid md:grid-cols-4 gap-8 max-w-6xl mx-auto text-left">
-          <div className="p-4 border rounded-lg shadow hover:shadow-lg transition">
-            <h3 className="font-semibold mb-2">1. Continuous Monitoring</h3>
-            <p>AI listens for distress patterns while respecting privacy.</p>
-          </div>
-          <div className="p-4 border rounded-lg shadow hover:shadow-lg transition">
-            <h3 className="font-semibold mb-2">2. Anomaly Detection</h3>
-            <p>Detects sudden movement, shouting, or abnormal sensor data.</p>
-          </div>
-          <div className="p-4 border rounded-lg shadow hover:shadow-lg transition">
-            <h3 className="font-semibold mb-2">3. Smart Decision</h3>
-            <p>AI confirms risk using multiple signals to reduce false alarms.</p>
-          </div>
-          <div className="p-4 border rounded-lg shadow hover:shadow-lg transition">
-            <h3 className="font-semibold mb-2">4. Alert & Protect</h3>
-            <p>Emergency alerts sent to trusted contacts with live location.</p>
-          </div>
-        </div>
-      </section>
+    
 
       {/* PREDICTIVE SAFETY SCORE */}
       <section className="bg-purple-50 py-20 px-4 text-center">
-        <h2 className="text-4xl font-bold text-purple-900 mb-6">Predictive Safety Score</h2>
+        <h2 className="text-4xl font-bold text-pink-500 mb-6">Predictive Safety Score</h2>
         <p className="text-lg text-gray-700 mb-8 max-w-2xl mx-auto">
           Know the safety of an area before you step into it. Live data + AI generates a safety score to help you plan safer routes.
         </p>
@@ -168,7 +250,7 @@ function App() {
 
       {/* ABOUT */}
       <section className="bg-purple-50 py-20 px-4 text-center">
-        <h2 className="text-4xl font-bold text-purple-900 mb-6">About Us</h2>
+        <h2 className="text-4xl font-bold text-pink-500 mb-6">About Us</h2>
         <p className="text-lg text-gray-700 max-w-3xl mx-auto">
           SafeHer was created to address a reality many women live with every day. 
           We believe technology should protect, not intimidate. Social impact and ethical AI are at the heart of everything we do.
