@@ -69,7 +69,7 @@ function App() {
 <section
   id="home"
   className="relative min-h-screen flex flex-col justify-center items-center text-center px-4 pt-32 overflow-hidden
-             bg-gradient-to-br from-purple-800 via-pink-300 to-pink-600"
+             bg-gradient-to-br from-purple-300 via-pink-300 to-pink-300"
 >
 
 
