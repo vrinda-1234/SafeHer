@@ -8,11 +8,16 @@ const sosSchema = new mongoose.Schema(
       required: true,
     },
     location: {
-      lat: Number,
-      lng: Number,
+        lat: { type: Number, required: true },
+        lng: { type: Number, required: true },
+    },
+    message: {
+      type: String,
+      maxlength: 300,
     },
     status: {
       type: String,
+      enum: ["ACTIVE", "RESOLVED"],
       default: "ACTIVE",
     },
   },

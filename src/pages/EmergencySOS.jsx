@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-
+import axios from "axios";
 const EmergencySOS = () => {
   const [step, setStep] = useState("idle"); // idle → confirm → sent
   const [contacts, setContacts] = useState([]);
@@ -35,21 +35,47 @@ const EmergencySOS = () => {
   };
 
   // Step 2 → Send SOS + start live tracking
-  const sendSOS = () => {
-    if (!navigator.geolocation) return;
+  const sendSOS = async () => {
+    if (!location) {
+      alert("Location not available");
+      return;
+    }
 
-    const id = navigator.geolocation.watchPosition(
-      (position) => {
-        setLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        });
-      },
-      () => alert("Location permission denied")
-    );
+    try {
+      const token = localStorage.getItem("token");
 
-    setWatchId(id);
-    setStep("sent");
+      // 🔥 CALL BACKEND SOS API
+      await axios.post(
+        "http://localhost:5001/api/sos/trigger",
+        {
+          location: {
+            lat: location.lat,
+            lng: location.lng,
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // 📡 START LIVE LOCATION TRACKING AFTER SOS IS SAVED
+      const id = navigator.geolocation.watchPosition(
+        (position) => {
+          setLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        () => alert("Location permission denied")
+      );
+
+      setWatchId(id);
+      setStep("sent");
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to send SOS");
+    }
   };
 
   // Stop SOS safely
