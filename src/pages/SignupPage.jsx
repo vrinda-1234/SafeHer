@@ -2,24 +2,23 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import AuthLayout from "../components/AuthLayout";
-
-const InputField = ({ type = "text", placeholder, value, onChange,name }) => {
-    return (
-      <input
-        type={type}
-        name={name}  
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-        className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 transition"
-        required
-      />
-    );
-  };
-
+import axios from "axios";
+const InputField = ({ type = "text", placeholder, value, onChange, name }) => {
+  return (
+    <input
+      type={type}
+      name={name}
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 transition"
+      required
+    />
+  );
+};
 
 const Signup = () => {
-  const navigate=useNavigate();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -33,9 +32,7 @@ const Signup = () => {
       [e.target.name]: e.target.value,
     });
   };
-
-  const handleSubmit = (e) => {
-    
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
@@ -43,10 +40,26 @@ const Signup = () => {
       return;
     }
 
-    console.log("Signup Data:", formData);
-    // 🔗 Backend API call will go here
-    localStorage.setItem("isLoggedIn", "true");
-    navigate("/dashboard");
+    try {
+      const res = await axios.post("http://localhost:5001/api/auth/register", {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+      });
+
+      console.log("Signup response:", res.data);
+
+      // save token
+      localStorage.setItem("token", res.data.token);
+
+      // save user info
+      localStorage.setItem("user", JSON.stringify(res.data));
+
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Signup error:", error.response?.data || error.message);
+      alert(error.response?.data?.message || "Signup failed");
+    }
   };
 
   return (
@@ -55,7 +68,6 @@ const Signup = () => {
       subtitle="Your safety journey starts here"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-
         <InputField
           placeholder="Full Name"
           value={formData.name}
@@ -100,11 +112,9 @@ const Signup = () => {
             Login
           </Link>
         </p>
-
       </form>
     </AuthLayout>
   );
 };
 
 export default Signup;
-

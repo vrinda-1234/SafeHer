@@ -1,21 +1,26 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+
 const EmergencySOS = () => {
-  const [step, setStep] = useState("idle"); // idle → confirm → sent
+  const [step, setStep] = useState("idle");
   const [contacts, setContacts] = useState([]);
   const [location, setLocation] = useState(null);
   const [watchId, setWatchId] = useState(null);
 
-  // Load contacts from Profile
+  // store last sent location
+  let lastLat = null;
+  let lastLng = null;
+
+  // Load emergency contacts
   useEffect(() => {
     const savedProfile = localStorage.getItem("profile");
     if (savedProfile) {
       const parsed = JSON.parse(savedProfile);
-      setContacts(parsed.contacts || []);
+      setContacts(parsed.emergencyContacts || []);
     }
   }, []);
 
-  // Step 1 → get location once
+  // Step 1: Get current location
   const getLocationAndConfirm = () => {
     if (!navigator.geolocation) {
       alert("Geolocation not supported");
@@ -28,13 +33,61 @@ const EmergencySOS = () => {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
         });
+
         setStep("confirm");
       },
       () => alert("Location permission denied")
     );
   };
 
-  // Step 2 → Send SOS + start live tracking
+  // Start live tracking
+  const startTracking = () => {
+    const id = navigator.geolocation.watchPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        // ignore very tiny GPS movement
+        if (lastLat && lastLng) {
+          const diff = Math.abs(lat - lastLat) + Math.abs(lng - lastLng);
+          if (diff < 0.0001) return;
+        }
+
+        lastLat = lat;
+        lastLng = lng;
+
+        try {
+          const token = localStorage.getItem("token");
+
+          await axios.patch(
+            "http://localhost:5001/api/sos/update-location",
+            { lat, lng },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          console.log("Location updated:", lat, lng);
+        } catch (err) {
+          console.log("Location update error:", err);
+        }
+      },
+      (error) => {
+        console.log("Geolocation error:", error);
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 10000,
+        timeout: 5000,
+      }
+    );
+
+    setWatchId(id);
+  };
+
+  // Send SOS
   const sendSOS = async () => {
     if (!location) {
       alert("Location not available");
@@ -44,7 +97,6 @@ const EmergencySOS = () => {
     try {
       const token = localStorage.getItem("token");
 
-      // 🔥 CALL BACKEND SOS API
       await axios.post(
         "http://localhost:5001/api/sos/trigger",
         {
@@ -60,30 +112,21 @@ const EmergencySOS = () => {
         }
       );
 
-      // 📡 START LIVE LOCATION TRACKING AFTER SOS IS SAVED
-      const id = navigator.geolocation.watchPosition(
-        (position) => {
-          setLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          });
-        },
-        () => alert("Location permission denied")
-      );
-
-      setWatchId(id);
+      startTracking();
       setStep("sent");
     } catch (error) {
-      alert(error.response?.data?.message || "Failed to send SOS");
+      console.error("SOS error:", error);
+      alert("Failed to send SOS");
     }
   };
 
-  // Stop SOS safely
+  // Stop SOS
   const stopSOS = () => {
-    if (watchId) {
+    if (watchId !== null) {
       navigator.geolocation.clearWatch(watchId);
+      setWatchId(null);
     }
-    setLocation(null);
+
     setStep("idle");
   };
 
@@ -96,13 +139,14 @@ const EmergencySOS = () => {
             <h1 className="text-3xl font-bold text-red-700 mb-4">
               🚨 Emergency SOS
             </h1>
+
             <p className="text-gray-600 mb-6">
               This will alert your trusted contacts with your live location.
             </p>
 
             <button
               onClick={getLocationAndConfirm}
-              className="w-full bg-red-600 text-white py-3 rounded-xl font-semibold hover:bg-red-700 transition"
+              className="w-full bg-red-600 text-white py-3 rounded-xl font-semibold hover:bg-red-700"
             >
               Send SOS Alert
             </button>
@@ -118,13 +162,13 @@ const EmergencySOS = () => {
 
             {contacts.length === 0 ? (
               <p className="text-sm text-red-600 mb-4">
-                ⚠️ No emergency contacts found. Please add contacts in Profile.
+                ⚠️ No emergency contacts found
               </p>
             ) : (
               <ul className="mb-4">
                 {contacts.map((c, i) => (
                   <li key={i} className="text-sm text-gray-700">
-                    📞 {c}
+                    📞 {c.name} ({c.phone})
                   </li>
                 ))}
               </ul>
@@ -135,7 +179,7 @@ const EmergencySOS = () => {
                 href={`https://www.google.com/maps?q=${location.lat},${location.lng}`}
                 target="_blank"
                 rel="noreferrer"
-                className="text-sm text-blue-600 underline block mb-4"
+                className="text-blue-600 underline text-sm block mb-4"
               >
                 📍 View Current Location
               </a>
@@ -143,12 +187,7 @@ const EmergencySOS = () => {
 
             <button
               onClick={sendSOS}
-              disabled={contacts.length === 0}
-              className={`w-full py-3 rounded-xl font-semibold mb-2 transition ${
-                contacts.length === 0
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-red-600 text-white hover:bg-red-700"
-              }`}
+              className="w-full bg-red-600 text-white py-3 rounded-xl font-semibold mb-2"
             >
               Confirm & Send
             </button>
@@ -170,14 +209,12 @@ const EmergencySOS = () => {
             </h1>
 
             <p className="text-gray-600 mb-3">
-              Emergency contacts are being notified. Stay calm.
+              Emergency contacts are being notified.
             </p>
 
-            {location && (
-              <p className="text-sm text-purple-700 mb-4">
-                📡 Live location is being shared continuously
-              </p>
-            )}
+            <p className="text-sm text-purple-700 mb-4">
+              📡 Live location is being shared
+            </p>
 
             <button
               onClick={stopSOS}

@@ -8,8 +8,8 @@ const sosSchema = new mongoose.Schema(
       required: true,
     },
     location: {
-        lat: { type: Number, required: true },
-        lng: { type: Number, required: true },
+      lat: Number,
+      lng: Number,
     },
     message: {
       type: String,

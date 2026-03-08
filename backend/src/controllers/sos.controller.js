@@ -28,13 +28,15 @@ export const triggerSOS = async (req, res) => {
         lat: location.lat,
         lng: location.lng,
       },
+      message,
     });
 
     await sendAlert(req.user, location.lat, location.lng);
 
     res.status(201).json({
       message: "SOS triggered successfully",
-      sos,
+      sosId: sos._id,
+     trackingLink: `http://localhost:3000/track/${sos._id}`,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -65,4 +67,48 @@ export const resolveSOS = async (req, res) => {
   await sos.save();
 
   res.json({ message: "SOS resolved" });
+};
+export const getSOSById = async (req, res) => {
+  try {
+    const sos = await SOS.findById(req.params.id);
+
+    if (!sos) {
+      return res.status(404).json({ message: "SOS not found" });
+    }
+
+    res.json(sos);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+export const updateLocation = async (req, res) => {
+  try {
+    const { lat, lng } = req.body;
+
+    const sos = await SOS.findOneAndUpdate(
+      {
+        userId: req.user._id,
+        status: "ACTIVE",
+      },
+      {
+        location: { lat, lng },
+      },
+      { new: true }
+    );
+
+    if (!sos) {
+      return res.status(404).json({
+        message: "No active SOS found",
+      });
+    }
+
+    res.json({
+      message: "Location updated",
+      sos,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Location update failed",
+    });
+  }
 };
