@@ -18,34 +18,34 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage/>} />
         <Route path="/dashboard" element={
-   // <ProtectedRoute>
+    <ProtectedRoute>
       <Dashboard />
-  //  </ProtectedRoute>
+   </ProtectedRoute>
   }/>
   <Route
   path="/sos"
   element={
-   // <ProtectedRoute>
+    <ProtectedRoute>
       <EmergencySOS />
-    //</ProtectedRoute>
+    </ProtectedRoute>
   }
 />
 
 <Route
   path="/location"
   element={
-   // <ProtectedRoute>
+    <ProtectedRoute>
       <LiveLocation />
-   // </ProtectedRoute>
+    </ProtectedRoute>
   }
 />
 
 <Route
   path="/profile"
   element={
-    //<ProtectedRoute>
+    <ProtectedRoute>
       <Profile />
-   // </ProtectedRoute>
+    </ProtectedRoute>
   }
 />
       </Routes>

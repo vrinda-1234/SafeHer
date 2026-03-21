@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../components/AuthLayout";
-import axios from "axios";
+import API from "../utils/api";
+
 const InputField = ({ type = "text", placeholder, value, onChange, name }) => {
   return (
     <input
@@ -19,12 +19,18 @@ const InputField = ({ type = "text", placeholder, value, onChange, name }) => {
 
 const Login = () => {
   const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
 
+  const [errorMsg, setErrorMsg] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const handleChange = (e) => {
+    setErrorMsg(""); // 🔥 clear error while typing
+
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -34,31 +40,23 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    setLoading(true);
+    setErrorMsg("");
+
     try {
-      const res = await axios.post(
-        "http://localhost:5001/api/auth/login",
-        formData
-      );
-
-      console.log("Login Response:", res.data);
-
-      // save token
-      localStorage.setItem("token", res.data.token);
-
-      // save user info
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          id: res.data._id,
-          name: res.data.name,
-          email: res.data.email,
-        })
-      );
+      await API.post("/api/auth/login", formData);
 
       navigate("/dashboard");
     } catch (error) {
-      console.error("Login error:", error.response?.data || error.message);
-      alert("Login failed");
+      const message = error.response?.data?.message || "Something went wrong";
+
+      if (message === "Invalid credentials") {
+        setErrorMsg("❌ Invalid email or password");
+      } else {
+        setErrorMsg(message);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -81,11 +79,17 @@ const Login = () => {
           name="password"
         />
 
+        {/* 🔥 ERROR MESSAGE UI */}
+        {errorMsg && (
+          <p className="text-red-600 text-sm text-center">{errorMsg}</p>
+        )}
+
         <button
           type="submit"
-          className="w-full bg-purple-700 text-white py-3 rounded-lg font-medium hover:bg-purple-800 transition"
+          disabled={loading}
+          className="w-full bg-purple-700 text-white py-3 rounded-lg font-medium hover:bg-purple-800 transition disabled:opacity-50"
         >
-          Login
+          {loading ? "Logging in..." : "Login"}
         </button>
 
         <p className="text-sm text-center text-gray-600 mt-4">

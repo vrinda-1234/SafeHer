@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../components/AuthLayout";
-import axios from "axios";
+import API from "../utils/api";
+
 const InputField = ({ type = "text", placeholder, value, onChange, name }) => {
   return (
     <input
@@ -19,6 +19,7 @@ const InputField = ({ type = "text", placeholder, value, onChange, name }) => {
 
 const Signup = () => {
   const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -26,39 +27,49 @@ const Signup = () => {
     confirmPassword: "",
   });
 
+  const [errorMsg, setErrorMsg] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const handleChange = (e) => {
+    setErrorMsg(""); // 🔥 clear error while typing
+
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    setErrorMsg("");
+
+    // 🔥 frontend validation
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match");
+      setErrorMsg("❌ Passwords do not match");
       return;
     }
 
+    setLoading(true);
+
     try {
-      const res = await axios.post("http://localhost:5001/api/auth/register", {
+      await API.post("/api/auth/register", {
         name: formData.name,
         email: formData.email,
         password: formData.password,
       });
 
-      console.log("Signup response:", res.data);
-
-      // save token
-      localStorage.setItem("token", res.data.token);
-
-      // save user info
-      localStorage.setItem("user", JSON.stringify(res.data));
-
       navigate("/dashboard");
     } catch (error) {
-      console.error("Signup error:", error.response?.data || error.message);
-      alert(error.response?.data?.message || "Signup failed");
+      const message = error.response?.data?.message || "Something went wrong";
+
+      if (message === "User already exists") {
+        setErrorMsg("⚠️ Email already registered. Please login.");
+      } else {
+        setErrorMsg(message);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -99,11 +110,17 @@ const Signup = () => {
           name="confirmPassword"
         />
 
+        {/* 🔥 ERROR MESSAGE UI */}
+        {errorMsg && (
+          <p className="text-red-600 text-sm text-center">{errorMsg}</p>
+        )}
+
         <button
           type="submit"
-          className="w-full bg-purple-700 text-white py-3 rounded-lg font-medium hover:bg-purple-800 transition"
+          disabled={loading}
+          className="w-full bg-purple-700 text-white py-3 rounded-lg font-medium hover:bg-purple-800 transition disabled:opacity-50"
         >
-          Sign Up
+          {loading ? "Creating Account..." : "Sign Up"}
         </button>
 
         <p className="text-sm text-center text-gray-600 mt-4">
