@@ -9,9 +9,10 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import EmergencySOS from "./pages/EmergencySOS";
 import LiveLocation from "./pages/LiveLocation";
 import Profile from "./pages/Profile";
-
+import { AuthProvider } from "./context/AuthContext";
 export default function App() {
   return (
+    <AuthProvider>
     <Router>
       <Routes>
         <Route path="/" element={<LandingPage />} />
@@ -50,5 +51,6 @@ export default function App() {
 />
       </Routes>
     </Router>
+    </AuthProvider>
   );
 }

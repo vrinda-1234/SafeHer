@@ -1,12 +1,14 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext"; // ✅ ADD
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const { user, logout } = useAuth(); // ✅ GET FROM CONTEXT
 
-  const handleLogout = () => {
-    localStorage.removeItem("isLoggedIn");
-    navigate("/login");
+  const handleLogout = async () => {
+    await logout(); // 🔥 clears cookie + state
+    navigate("/login"); // 🔥 redirect
   };
 
   return (
@@ -34,6 +36,9 @@ const Navbar = () => {
         >
           Profile
         </button>
+
+        {/* 🔥 OPTIONAL: show user name */}
+        {user && <span className="text-sm text-gray-600">Hi, {user.name}</span>}
 
         <button
           onClick={handleLogout}

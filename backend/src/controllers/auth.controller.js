@@ -47,10 +47,5 @@ export const logoutUser = (req, res) => {
     expires: new Date(0),
   });
 
-  res.cookie("refreshToken", "", {
-    httpOnly: true,
-    expires: new Date(0),
-  });
-
   res.json({ message: "Logged out" });
 };

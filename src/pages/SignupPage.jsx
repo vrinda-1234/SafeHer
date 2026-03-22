@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../components/AuthLayout";
 import API from "../utils/api";
-
+import { useAuth } from "../context/AuthContext";
 const InputField = ({ type = "text", placeholder, value, onChange, name }) => {
   return (
     <input
@@ -18,6 +18,7 @@ const InputField = ({ type = "text", placeholder, value, onChange, name }) => {
 };
 
 const Signup = () => {
+  const { setUser } = useAuth();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -53,11 +54,12 @@ const Signup = () => {
     setLoading(true);
 
     try {
-      await API.post("/api/auth/register", {
+      const res = await API.post("/api/auth/register", {
         name: formData.name,
         email: formData.email,
         password: formData.password,
       });
+      setUser(res.data);
 
       navigate("/dashboard");
     } catch (error) {
