@@ -46,6 +46,12 @@ const Navbar = () => {
         >
           Logout
         </button>
+        <button
+          onClick={() => navigate("/contacts")}
+          className="text-gray-700 hover:text-purple-700"
+        >
+          Contacts
+        </button>
       </div>
     </div>
   );

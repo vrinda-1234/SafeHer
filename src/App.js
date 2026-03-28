@@ -10,6 +10,8 @@ import EmergencySOS from "./pages/EmergencySOS";
 import LiveLocation from "./pages/LiveLocation";
 import Profile from "./pages/Profile";
 import { AuthProvider } from "./context/AuthContext";
+import Contacts from "./pages/Contacts";
+import TrackSOS from "./pages/TrackSOS";
 export default function App() {
   return (
     <AuthProvider>
@@ -23,6 +25,7 @@ export default function App() {
       <Dashboard />
    </ProtectedRoute>
   }/>
+  <Route path="/track/:id" element={<TrackSOS />} />
   <Route
   path="/sos"
   element={
@@ -49,6 +52,13 @@ export default function App() {
     </ProtectedRoute>
   }
 />
+<Route path="/contacts"
+      element={
+        <ProtectedRoute>
+        <Contacts />
+      </ProtectedRoute>
+      }
+  />    
       </Routes>
     </Router>
     </AuthProvider>

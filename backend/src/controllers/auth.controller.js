@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 const generateAccessToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
-      expiresIn: "15m",
+      expiresIn: "7d",
     });
   };
   
@@ -13,7 +13,7 @@ const generateAccessToken = (id) => {
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: false, // true in production (HTTPS)
-      sameSite: "strict",
+      sameSite: "lax",
       maxAge: 15 * 60 * 1000,
     });
   

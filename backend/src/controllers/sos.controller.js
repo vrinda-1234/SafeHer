@@ -18,6 +18,7 @@ export const triggerSOS = async (req, res) => {
     if (existingSOS) {
       return res.status(400).json({
         message: "You already have an active SOS",
+        sosId: existingSOS._id,
       });
     }
 
@@ -84,7 +85,9 @@ export const getSOSById = async (req, res) => {
 export const updateLocation = async (req, res) => {
   try {
     const { lat, lng } = req.body;
-
+    if (lat == null || lng == null) {
+      return res.status(400).json({ message: "Invalid location data" });
+    }
     const sos = await SOS.findOneAndUpdate(
       {
         userId: req.user._id,
