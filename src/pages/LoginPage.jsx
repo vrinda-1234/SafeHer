@@ -1,155 +1,107 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import AuthLayout from "../components/AuthLayout";
+import API from "../utils/api";
 import { useAuth } from "../context/AuthContext";
-
-const Navbar = () => {
-  const navigate = useNavigate();
-  const { user, setUser } = useAuth(); // 🔥 REAL USER
-
-  const [open, setOpen] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-
-  const [form, setForm] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
-    phone: user?.phone || "",
-  });
-
-  // 🔹 Handle input change
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  // 🔹 Save profile (frontend for now)
-  const handleSave = () => {
-    setUser(form); // update global user
-    setShowModal(false);
-  };
-
-  // 🔹 Logout
-  const handleLogout = () => {
-    setUser(null); // clear user
-    navigate("/");
-  };
-
-  // 🔹 Get first letter for icon
-  const getInitial = () => {
-    return user?.name ? user.name.charAt(0).toUpperCase() : "?";
-  };
-
+const InputField = ({ type = "text", placeholder, value, onChange, name }) => {
   return (
-    <>
-      {/* Navbar */}
-      <div className="bg-white shadow px-6 py-4 flex justify-between items-center">
-        <h1
-          className="text-xl font-bold text-purple-800 cursor-pointer"
-          onClick={() => navigate("/dashboard")}
-        >
-          SafeHer
-        </h1>
-
-        {/* Profile Icon */}
-        <div className="relative">
-          <div
-            onClick={() => setOpen(!open)}
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-purple-500 text-white font-bold cursor-pointer hover:bg-purple-600"
-          >
-            {getInitial()}
-          </div>
-
-          {/* Dropdown */}
-          {open && (
-            <div className="absolute right-0 mt-2 w-64 bg-white border rounded-lg shadow-lg p-4 z-50">
-              <p className="font-semibold text-purple-800">
-                {user?.name || "No Name"}
-              </p>
-
-              <p className="text-sm text-gray-500">
-                {user?.email || "No Email"}
-              </p>
-
-              <p className="text-sm text-gray-500 mt-1">
-                📞 {user?.phone || "N/A"}
-              </p>
-
-              <hr className="my-3" />
-
-              <button
-                onClick={() => {
-                  setShowModal(true);
-                  setOpen(false);
-                }}
-                className="block w-full text-left text-sm text-gray-700 hover:text-purple-700 mb-2"
-              >
-                Edit Profile
-              </button>
-
-              <button
-                onClick={handleLogout}
-                className="block w-full text-left text-sm text-red-600 hover:text-red-700"
-              >
-                Logout
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Edit Profile Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-xl shadow-lg w-96">
-            <h2 className="text-lg font-semibold text-purple-800 mb-4">
-              Edit Profile
-            </h2>
-
-            <input
-              type="text"
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              placeholder="Name"
-              className="w-full mb-3 p-2 border rounded"
-            />
-
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              placeholder="Email"
-              className="w-full mb-3 p-2 border rounded"
-            />
-
-            <input
-              type="text"
-              name="phone"
-              value={form.phone}
-              onChange={handleChange}
-              placeholder="Phone Number"
-              className="w-full mb-4 p-2 border rounded"
-            />
-
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 bg-gray-200 rounded"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={handleSave}
-                className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+    <input
+      type={type}
+      name={name}
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 transition"
+      required
+    />
   );
 };
 
-export default Navbar;
+const Login = () => {
+  const { setUser } = useAuth();
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
+  const [errorMsg, setErrorMsg] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (e) => {
+    setErrorMsg(""); // 🔥 clear error while typing
+
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    setLoading(true);
+    setErrorMsg("");
+
+    try {
+      const res = await API.post("/api/auth/login", formData);
+      setUser(res.data);
+      navigate("/dashboard");
+    } catch (error) {
+      const message = error.response?.data?.message || "Something went wrong";
+
+      if (message === "Invalid credentials") {
+        setErrorMsg("❌ Invalid email or password");
+      } else {
+        setErrorMsg(message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <AuthLayout title="Welcome Back" subtitle="Log in to stay protected">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <InputField
+          type="email"
+          placeholder="Email Address"
+          value={formData.email}
+          onChange={handleChange}
+          name="email"
+        />
+
+        <InputField
+          type="password"
+          placeholder="Password"
+          value={formData.password}
+          onChange={handleChange}
+          name="password"
+        />
+
+        {/* 🔥 ERROR MESSAGE UI */}
+        {errorMsg && (
+          <p className="text-red-600 text-sm text-center">{errorMsg}</p>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-purple-700 text-white py-3 rounded-lg font-medium hover:bg-purple-800 transition disabled:opacity-50"
+        >
+          {loading ? "Logging in..." : "Login"}
+        </button>
+
+        <p className="text-sm text-center text-gray-600 mt-4">
+          Don’t have an account?
+          <Link to="/signup" className="text-purple-600 font-medium ml-1">
+            Sign Up
+          </Link>
+        </p>
+      </form>
+    </AuthLayout>
+  );
+};
+
+export default Login;

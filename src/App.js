@@ -1,4 +1,5 @@
 // src/App.jsx
+import "leaflet/dist/leaflet.css";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import React from "react";
 import LandingPage from "./pages/LandingPage";

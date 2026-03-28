@@ -1,75 +1,118 @@
 import React, { useState } from "react";
+import { useAuth } from "../context/AuthContext";
 
 const Profile = () => {
-  const [name, setName] = useState("");
-  const [contacts, setContacts] = useState([""]);
+  const { user, setUser } = useAuth();
 
-  const addContact = () => {
-    setContacts([...contacts, ""]);
+  const [form, setForm] = useState({
+    name: user?.name || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
+    bloodGroup: user?.bloodGroup || "",
+    emergencyContact: user?.emergencyContact || "",
+  });
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const updateContact = (index, value) => {
-    const updated = [...contacts];
-    updated[index] = value;
-    setContacts(updated);
-  };
-  const saveProfile = () => {
-    const profileData = {
-      name,
-      contacts,
-    };
-
-    localStorage.setItem("profile", JSON.stringify(profileData));
-    alert("Profile saved successfully!");
+  const handleSave = () => {
+    setUser(form);
+    alert("Profile updated!");
   };
 
   return (
-    <div className="min-h-screen bg-purple-50 flex items-center justify-center p-6">
-      <div className="bg-white p-8 rounded-xl shadow max-w-md w-full">
-        <h1 className="text-3xl font-bold text-purple-800 mb-6 text-center">
-          👤 Profile
-        </h1>
+    <div className="max-w-3xl mx-auto space-y-6">
 
-        {/* Name */}
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Your Name
-        </label>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full mb-4 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
-          placeholder="Enter your name"
-        />
+      {/* 👤 PROFILE HEADER */}
+      <div className="bg-white p-6 rounded-2xl shadow flex items-center gap-6">
+        <div className="w-20 h-20 rounded-full bg-purple-500 text-white flex items-center justify-center text-3xl font-bold">
+          {form.name ? form.name.charAt(0).toUpperCase() : "?"}
+        </div>
 
-        {/* Emergency Contacts */}
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Emergency Contacts
-        </label>
+        <div>
+          <h2 className="text-2xl font-bold text-purple-900">
+            {form.name || "Your Name"}
+          </h2>
+          <p className="text-gray-600">{form.email}</p>
+          <p className="text-gray-600">📞 {form.phone || "N/A"}</p>
+        </div>
+      </div>
 
-        {contacts.map((contact, index) => (
+      {/* ✏️ EDIT BASIC INFO */}
+      <div className="bg-white p-6 rounded-2xl shadow">
+        <h3 className="text-lg font-semibold text-purple-800 mb-4">
+          Basic Information
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
           <input
-            key={index}
             type="text"
-            value={contact}
-            onChange={(e) => updateContact(index, e.target.value)}
-            className="w-full mb-3 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
-            placeholder={`Contact ${index + 1}`}
+            name="name"
+            value={form.name}
+            onChange={handleChange}
+            placeholder="Full Name"
+            className="border p-2 rounded"
           />
-        ))}
 
-        <button
-          onClick={addContact}
-          className="w-full mb-4 border border-purple-500 text-purple-700 py-2 rounded-lg hover:bg-purple-100 transition"
-        >
-          + Add Another Contact
-        </button>
+          <input
+            type="email"
+            name="email"
+            value={form.email}
+            onChange={handleChange}
+            placeholder="Email"
+            className="border p-2 rounded"
+          />
 
+          <input
+            type="text"
+            name="phone"
+            value={form.phone}
+            onChange={handleChange}
+            placeholder="Phone Number"
+            className="border p-2 rounded"
+          />
+
+        </div>
+      </div>
+
+      {/* 🚨 EMERGENCY INFO */}
+      <div className="bg-white p-6 rounded-2xl shadow">
+        <h3 className="text-lg font-semibold text-red-600 mb-4">
+          Emergency Information
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          <input
+            type="text"
+            name="bloodGroup"
+            value={form.bloodGroup}
+            onChange={handleChange}
+            placeholder="Blood Group (e.g. B+)"
+            className="border p-2 rounded"
+          />
+
+          <input
+            type="text"
+            name="emergencyContact"
+            value={form.emergencyContact}
+            onChange={handleChange}
+            placeholder="Emergency Contact Number"
+            className="border p-2 rounded"
+          />
+
+        </div>
+      </div>
+
+      {/* 💾 SAVE BUTTON */}
+      <div className="text-right">
         <button
-          onClick={saveProfile}
-          className="w-full bg-purple-600 text-white py-3 rounded-xl font-semibold hover:bg-purple-700 transition"
+          onClick={handleSave}
+          className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700"
         >
-          Save Profile
+          Save Changes
         </button>
       </div>
     </div>

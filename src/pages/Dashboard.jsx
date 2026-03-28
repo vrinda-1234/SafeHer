@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../pages/Navbar";
-
+import Location from "../pages/Location";
+import Profile from "../pages/Profile";
 const Dashboard = () => {
   const [active, setActive] = useState("dashboard");
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   // 🔹 Sidebar
   const Sidebar = () => (
@@ -66,7 +67,7 @@ const Dashboard = () => {
         <Card
           title="👤 Profile"
           desc="View and edit your profile"
-          onClick={() => setActive("settings")}
+          onClick={() => setActive("profile")}
         />
       </div>
     </div>
@@ -117,14 +118,14 @@ const Dashboard = () => {
     </div>
   );
 
-  const Location = () => (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">Live Location Tracking</h1>
-      <div className="bg-white p-6 rounded-xl shadow">
-        Your real-time location will be shown here.
-      </div>
-    </div>
-  );
+  // const Location = () => (
+  //   <div>
+  //     <h1 className="text-2xl font-bold mb-6">Live Location Tracking</h1>
+  //     <div className="bg-white p-6 rounded-xl shadow">
+  //       Your real-time location will be shown here.
+  //     </div>
+  //   </div>
+  // );
 
   const AI = () => (
     <div>
@@ -179,6 +180,8 @@ const Dashboard = () => {
         return <Alerts />;
       case "settings":
         return <Settings />;
+      case "profile":
+        return <Profile />;
       default:
         return <Home />;
     }

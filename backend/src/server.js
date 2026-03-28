@@ -6,7 +6,7 @@ import authRoutes from "./routes/auth.routes.js";
 import sosRoutes from "./routes/sos.routes.js";
 import contactRoutes from "./routes/contact.routes.js";
 import cookieParser from "cookie-parser";
-
+import locationRoutes from "./routes/location.routes.js";
 
 dotenv.config();
 connectDB();
@@ -24,7 +24,6 @@ app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/sos", sosRoutes);
-app.use("/api/contact",contactRoutes);
 app.get("/", (req, res) => {
   res.send("SafeHer backend running 🚀");
 });
