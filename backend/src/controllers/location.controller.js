@@ -7,7 +7,7 @@ export const saveLocation = async (req, res) => {
     const { latitude, longitude } = req.body;
 
     const location = await Location.create({
-      userId: req.user.id,
+      userId:req.user._id,
       latitude,
       longitude,
     });
@@ -24,7 +24,7 @@ export const savePlace = async (req, res) => {
     const { label, latitude, longitude } = req.body;
 
     const place = await SavedLocation.create({
-      userId: req.user.id,
+      userId:req.user._id,
       label,
       latitude,
       longitude,
@@ -32,7 +32,7 @@ export const savePlace = async (req, res) => {
 
     // 🔥 RETURN ALL UPDATED PLACES
     const updatedPlaces = await SavedLocation.find({
-      userId: req.user.id,
+      userId:req.user._id,
     });
 
     res.status(201).json(updatedPlaces);
@@ -45,7 +45,7 @@ export const savePlace = async (req, res) => {
 export const getSavedPlaces = async (req, res) => {
   try {
     const places = await SavedLocation.find({
-      userId: req.user.id,
+      userId:req.user._id,
     });
 
     res.json(places);

@@ -7,6 +7,7 @@ const Contacts = () => {
     name: "",
     phone: "",
     relation: "",
+    email: "",
   });
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -37,7 +38,7 @@ const Contacts = () => {
     try {
       await API.post("/api/contact", form);
 
-      setForm({ name: "", phone: "", relation: "" });
+      setForm({ name: "", phone: "", relation: "", email: "" });
       fetchContacts(); // refresh list
     } catch (err) {
       setErrorMsg(err.response?.data?.message || "Failed to add contact");
@@ -81,6 +82,14 @@ const Contacts = () => {
           required
         />
 
+        <input
+          name="email"
+          placeholder="Email"
+          value={form.email}
+          onChange={handleChange}
+          className="w-full border p-2 rounded"
+          required
+        />
         <input
           name="relation"
           placeholder="Relation"

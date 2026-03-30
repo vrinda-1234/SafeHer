@@ -1,7 +1,7 @@
 import Contact from "../models/Contact.js";
 export const addContact=async(req,res)=>{
     try{
-        const { name, phone, relation } = req.body;
+      const { name, phone, relation, email } = req.body;
         if (!name || !phone) {
             return res.status(400).json({ message: "Name and phone required" });
           }
@@ -10,6 +10,7 @@ export const addContact=async(req,res)=>{
       name,
       phone,
       relation,
+      email
     });
 
     res.status(201).json(contact);

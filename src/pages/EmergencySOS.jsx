@@ -133,11 +133,7 @@ const EmergencySOS = () => {
     try {
       const res = await API.post("/api/sos/trigger", { location });
 
-      const link = `http://localhost:3000/track/${res.data.sosId}`;
-      setTrackingLink(link);
-
-      // 🔥 AUTO COPY
-      navigator.clipboard.writeText(link);
+      setTrackingLink(res.data.trackingLink);
 
       setSosId(res.data.sosId);
 
@@ -249,29 +245,6 @@ const EmergencySOS = () => {
 
         {step === "sent" && (
           <>
-            {/* 🔥 NEW IMPROVED LINK UI */}
-            <p className="text-green-700 font-semibold text-sm mb-1">
-              🔗 Send this link to your emergency contacts
-            </p>
-
-            <div className="flex mb-4">
-              <input
-                value={trackingLink}
-                readOnly
-                className="flex-1 border border-gray-300 p-2 rounded-l-lg bg-gray-50 text-sm focus:outline-none"
-              />
-
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(trackingLink);
-                  alert("Link copied!");
-                }}
-                className="bg-blue-600 text-white px-4 rounded-r-lg"
-              >
-                Copy
-              </button>
-            </div>
-
             <h1 className="text-2xl font-bold text-green-600 mb-3">
               🚨 SOS ACTIVE
             </h1>

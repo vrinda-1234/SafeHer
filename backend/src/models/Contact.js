@@ -15,6 +15,10 @@ const contactSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    email: {
+      type: String,   // ✅ NEW FIELD
+      required: true,
+    },
     relation: {
       type: String, // optional (Mother, Friend, etc.)
     },
