@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../pages/Navbar";
 import Location from "../pages/Location";
 import Profile from "../pages/Profile";
+import EmergencySOS from "./EmergencySOS";
+import Contacts from "./Contacts";
 const Dashboard = () => {
   const [active, setActive] = useState("dashboard");
   // const navigate = useNavigate();
@@ -51,7 +53,7 @@ const Dashboard = () => {
         <Card
           title="🚨 Emergency SOS"
           desc="Send instant alert to trusted contacts"
-          onClick={() => setActive("sos")}
+          onClick={() => setActive("EmergencySOS")}
           red
         />
         <Card
@@ -98,25 +100,25 @@ const Dashboard = () => {
 
   // 🔹 Pages (FULL PAGE STYLE)
 
-  const SOS = () => (
-    <div className="text-center mt-10">
-      <h1 className="text-2xl font-bold text-red-700 mb-6">
-        Emergency Assistance
-      </h1>
-      <button className="bg-red-600 text-white px-10 py-6 rounded-full text-lg hover:bg-red-700">
-        🚨 Trigger Emergency Alert
-      </button>
-    </div>
-  );
+  // const SOS = () => (
+  //   <div className="text-center mt-10">
+  //     <h1 className="text-2xl font-bold text-red-700 mb-6">
+  //       Emergency Assistance
+  //     </h1>
+  //     <button className="bg-red-600 text-white px-10 py-6 rounded-full text-lg hover:bg-red-700">
+  //       🚨 Trigger Emergency Alert
+  //     </button>
+  //   </div>
+  // );
 
-  const Contacts = () => (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">Trusted Contacts</h1>
-      <div className="bg-white p-6 rounded-xl shadow">
-        Manage your emergency contacts here.
-      </div>
-    </div>
-  );
+  // const Contacts = () => (
+  //   <div>
+  //     <h1 className="text-2xl font-bold mb-6">Trusted Contacts</h1>
+  //     <div className="bg-white p-6 rounded-xl shadow">
+  //       Manage your emergency contacts here.
+  //     </div>
+  //   </div>
+  // );
 
   // const Location = () => (
   //   <div>
@@ -167,7 +169,7 @@ const Dashboard = () => {
   const renderContent = () => {
     switch (active) {
       case "sos":
-        return <SOS />;
+        return <EmergencySOS />;
       case "contacts":
         return <Contacts />;
       case "location":
