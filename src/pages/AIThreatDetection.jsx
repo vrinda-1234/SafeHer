@@ -1,4 +1,5 @@
 import SoundDetector from "../components/SoundDetector";
+
 function AIMonitoring() {
   return (
     <div>

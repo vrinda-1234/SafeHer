@@ -1,137 +1,312 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+
+const AI_TRIGGER_COOLDOWN = 60000;
+const WINDOW_SIZE = 7;
+const LOUD_THRESHOLD = 0.12;
 
 const SoundDetector = () => {
   const [recording, setRecording] = useState(false);
   const [lastStatus, setLastStatus] = useState("Idle");
+  const [dangerCount, setDangerCount] = useState(0);
 
   const mediaRecorderRef = useRef(null);
   const streamRef = useRef(null);
   const chunksRef = useRef([]);
+
   const activeRef = useRef(false);
+  const isRestartingRef = useRef(false);
 
-  const dangerCountRef = useRef(0);
-  const lastDangerTimeRef = useRef(0);
+  const loudHistoryRef = useRef([]);
+  const dangerStreakRef = useRef(0);
+  const lastTriggerTimeRef = useRef(0);
 
-  // 📍 REAL LOCATION STORE
-  const locationRef = useRef({ lat: null, lng: null });
+  const activeSosIdRef = useRef(null);
+  const sosActiveRef = useRef(false);
 
-  const startMonitoring = async () => {
-    setRecording(true);
-    activeRef.current = true;
-    setLastStatus("Initializing microphone & location...");
+  const locationRef = useRef({ lat: 0, lng: 0 });
+  const chunkTimeoutRef = useRef(null);
 
-    // 📍 GET REAL LOCATION
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        locationRef.current = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        };
-        console.log("📍 Location fetched:", locationRef.current);
-      },
-      (error) => {
-        console.error("Location error:", error);
-      },
-      {
-        enableHighAccuracy: true,
-      }
-    );
-
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    streamRef.current = stream;
-
-    const mediaRecorder = new MediaRecorder(stream);
-    mediaRecorderRef.current = mediaRecorder;
-
-    mediaRecorder.ondataavailable = (event) => {
-      chunksRef.current.push(event.data);
-    };
-
-    mediaRecorder.onstop = async () => {
-      const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-      chunksRef.current = [];
-
-      const formData = new FormData();
-      formData.append("file", blob, "audio.webm");
-
+  // ==========================
+  // SYNC SOS FROM DB
+  // ==========================
+  useEffect(() => {
+    const syncSOS = async () => {
       try {
-        setLastStatus("Analyzing audio...");
-
-        const res = await fetch("http://127.0.0.1:8000/predict", {
-          method: "POST",
-          body: formData,
+        const res = await fetch("http://localhost:5001/api/sos/my", {
+          credentials: "include",
         });
 
         const data = await res.json();
+        const active = data?.find((s) => s.status === "ACTIVE");
 
-        const loudness = data.loudness || 0;
-        const isLoudEnough = loudness > 0.08;
-
-        const now = Date.now();
-        const cooldownPassed = now - lastDangerTimeRef.current > 20000;
-
-        if (isLoudEnough) {
-          dangerCountRef.current += 1;
-          setLastStatus(`⚠️ Suspicious sound (${dangerCountRef.current})`);
-        } else {
-          dangerCountRef.current = 0;
-          setLastStatus("🟢 Normal environment");
-        }
-
-        if (dangerCountRef.current >= 2 && cooldownPassed) {
-          setLastStatus("🚨 DANGER CONFIRMED");
-
-          lastDangerTimeRef.current = now;
-          dangerCountRef.current = 0;
-
-          await fetch("http://localhost:5001/api/sos/trigger", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({
-              message: "Danger detected",
-              location: locationRef.current, // ✅ FIXED HERE
-            }),
-          });
-
-          setLastStatus("📩 Alert sent");
+        if (active) {
+          activeSosIdRef.current = active._id;
+          sosActiveRef.current = true;
+          setLastStatus("🚨 Restored ACTIVE SOS from DB");
         }
       } catch (err) {
-        setLastStatus("❌ Error processing audio");
-      }
-
-      if (activeRef.current) {
-        startChunk();
+        console.error("SOS sync failed", err);
       }
     };
 
-    const startChunk = () => {
-      if (!activeRef.current) return;
+    syncSOS();
+  }, []);
 
-      mediaRecorder.start();
+  // ==========================
+  // LOCATION
+  // ==========================
+  const getLocation = () =>
+    new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) =>
+          resolve({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          }),
+        () => resolve({ lat: 0, lng: 0 }),
+        { enableHighAccuracy: true, timeout: 5000 }
+      );
+    });
 
-      setTimeout(() => {
-        if (mediaRecorder.state === "recording") {
-          mediaRecorder.stop();
-        }
-      }, 4000);
-    };
+  // ==========================
+  // SMOOTHING
+  // ==========================
+  const updateLoudnessWindow = (value) => {
+    const arr = loudHistoryRef.current;
 
-    startChunk();
+    arr.push(value);
+    if (arr.length > WINDOW_SIZE) arr.shift();
+
+    return (
+      arr.reduce((acc, v, i) => acc + v * (i + 1), 0) /
+      arr.reduce((acc, _, i) => acc + (i + 1), 0)
+    );
   };
 
-  const stopMonitoring = () => {
+  // ==========================
+  // SOS CHECK
+  // ==========================
+  const checkActiveSOS = async () => {
+    try {
+      const res = await fetch("http://localhost:5001/api/sos/my", {
+        credentials: "include",
+      });
+
+      const data = await res.json();
+      const active = data?.find((s) => s.status === "ACTIVE");
+
+      if (active) {
+        activeSosIdRef.current = active._id;
+        sosActiveRef.current = true;
+        return active;
+      }
+
+      sosActiveRef.current = false;
+      activeSosIdRef.current = null;
+      return null;
+    } catch (err) {
+      console.error(err);
+      return null;
+    }
+  };
+
+  // ==========================
+  // UPDATE LOCATION
+  // ==========================
+  const updateSOSLocation = async () => {
+    if (!activeSosIdRef.current || !sosActiveRef.current) return;
+
+    try {
+      await fetch("http://localhost:5001/api/sos/update-location", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          sosId: activeSosIdRef.current,
+          lat: locationRef.current.lat,
+          lng: locationRef.current.lng,
+        }),
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // ==========================
+  // TRIGGER SOS
+  // ==========================
+  const triggerAISOS = async () => {
+    try {
+      const existing = await checkActiveSOS();
+      if (existing) {
+        setLastStatus("🚨 SOS already ACTIVE (DB)");
+        console.log("Sos already active");
+        return;
+      }
+
+      const now = Date.now();
+      if (now - lastTriggerTimeRef.current < AI_TRIGGER_COOLDOWN) return;
+
+      lastTriggerTimeRef.current = now;
+
+      const res = await fetch("http://localhost:5001/api/sos/trigger", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          message: "Danger detected by AI monitoring",
+          location: locationRef.current,
+          source: "AI",
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setLastStatus(data.message || "SOS failed");
+        return;
+      }
+
+      activeSosIdRef.current = data.sosId;
+      sosActiveRef.current = true;
+
+      setLastStatus("🚨 AI SOS CREATED");
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // ==========================
+  // START MONITORING
+  // ==========================
+  const startMonitoring = async () => {
+    try {
+      setRecording(true);
+      activeRef.current = true;
+
+      locationRef.current = await getLocation();
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+      });
+
+      streamRef.current = stream;
+
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (activeRef.current) chunksRef.current.push(e.data);
+      };
+
+      const startChunk = () => {
+        if (!activeRef.current) return;
+
+        chunksRef.current = [];
+        mediaRecorder.start();
+
+        chunkTimeoutRef.current = setTimeout(() => {
+          if (mediaRecorder.state === "recording") {
+            mediaRecorder.stop();
+          }
+        }, 4000);
+      };
+
+      mediaRecorder.onstop = async () => {
+        if (!activeRef.current || isRestartingRef.current) return;
+
+        isRestartingRef.current = true;
+
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+
+        console.log("Audio chunk size:", blob.size); // DEBUG
+
+        try {
+          const formData = new FormData();
+          formData.append("file", blob, "audio.webm");
+
+          const res = await fetch("http://127.0.0.1:8000/predict", {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await res.json();
+
+          const isDanger = data.danger === true;
+
+          console.log("ML RESULT:", data);
+
+          if (isDanger) {
+            dangerStreakRef.current++;
+          } else {
+            dangerStreakRef.current = Math.max(0, dangerStreakRef.current - 1);
+          }
+
+          setDangerCount(dangerStreakRef.current);
+
+          if (dangerStreakRef.current >= 3) {
+            setLastStatus("🚨 DANGER CONFIRMED");
+
+            console.log("Sos is being triggered");
+
+            dangerStreakRef.current = 0;
+            setDangerCount(0);
+
+            await triggerAISOS();
+          } else {
+            setLastStatus(isDanger ? "⚠️ Suspicious sound" : "🟢 Normal");
+          }
+
+          if (sosActiveRef.current) {
+            updateSOSLocation();
+          }
+        } catch (err) {
+          console.error(err);
+        }
+
+        isRestartingRef.current = false;
+        if (activeRef.current) startChunk();
+      };
+
+      startChunk();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // ==========================
+  // STOP MONITORING
+  // ==========================
+  const stopMonitoring = async () => {
     activeRef.current = false;
     setRecording(false);
-    setLastStatus("Monitoring stopped");
 
-    if (mediaRecorderRef.current?.state === "recording") {
-      mediaRecorderRef.current.stop();
+    try {
+      if (activeSosIdRef.current) {
+        await fetch(
+          `http://localhost:5001/api/sos/${activeSosIdRef.current}/resolve`,
+          {
+            method: "PUT",
+            credentials: "include",
+          }
+        );
+      }
+    } catch (err) {
+      console.error(err);
     }
+
+    activeSosIdRef.current = null;
+    sosActiveRef.current = false;
+
+    setDangerCount(0);
+    dangerStreakRef.current = 0;
+    loudHistoryRef.current = [];
 
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((t) => t.stop());
     }
+
+    setLastStatus("Monitoring stopped");
   };
 
   return (
@@ -139,12 +314,8 @@ const SoundDetector = () => {
       <h2 style={styles.title}>🛡️ SafeHer AI Monitoring</h2>
 
       <div style={recording ? styles.statusOn : styles.statusOff}>
-        {recording ? "🟢 LIVE MONITORING ACTIVE" : "🔴 MONITORING STOPPED"}
+        {recording ? "🟢 LIVE MONITORING ACTIVE" : "🔴 STOPPED"}
       </div>
-
-      {recording && (
-        <p style={styles.listening}>🎤 Listening for distress sounds...</p>
-      )}
 
       <div style={{ marginTop: 20 }}>
         {!recording ? (
@@ -158,18 +329,13 @@ const SoundDetector = () => {
         )}
       </div>
 
-      {/* 🔥 CONSOLE (UNCHANGED UI) */}
       <div style={styles.console}>
-        <h3 style={styles.consoleTitle}>📊 Live Monitoring Console</h3>
-
-        <p style={styles.text}>
+        <h3>📊 Live Console</h3>
+        <p>
           <b>Status:</b> {lastStatus}
         </p>
-        <p style={styles.text}>
-          <b>Danger Count:</b> {dangerCountRef.current}
-        </p>
-        <p style={styles.text}>
-          <b>System:</b> {recording ? "Active" : "Idle"}
+        <p>
+          <b>Danger Score:</b> {dangerCount}
         </p>
       </div>
     </div>
@@ -177,80 +343,13 @@ const SoundDetector = () => {
 };
 
 const styles = {
-  container: {
-    textAlign: "center",
-    padding: "40px",
-    fontFamily: "Arial",
-  },
-
-  title: {
-    fontSize: "24px",
-    marginBottom: "20px",
-  },
-
-  statusOn: {
-    backgroundColor: "#d1f7d6",
-    color: "#1b7f2a",
-    padding: "10px",
-    borderRadius: "8px",
-    fontWeight: "bold",
-    display: "inline-block",
-  },
-
-  statusOff: {
-    backgroundColor: "#ffd6d6",
-    color: "#b30000",
-    padding: "10px",
-    borderRadius: "8px",
-    fontWeight: "bold",
-    display: "inline-block",
-  },
-
-  listening: {
-    marginTop: "15px",
-    fontSize: "14px",
-    color: "#555",
-  },
-
-  startBtn: {
-    padding: "10px 20px",
-    backgroundColor: "#2e7d32",
-    color: "white",
-    border: "none",
-    borderRadius: "8px",
-    cursor: "pointer",
-  },
-
-  stopBtn: {
-    padding: "10px 20px",
-    backgroundColor: "#c62828",
-    color: "white",
-    border: "none",
-    borderRadius: "8px",
-    cursor: "pointer",
-  },
-
-  console: {
-    marginTop: "40px",
-    width: "100%",
-    backgroundColor: "#f4f6f8",
-    color: "#1a1a1a",
-    padding: "25px",
-    textAlign: "left",
-    borderRadius: "12px",
-    boxShadow: "0 4px 15px rgba(0,0,0,0.08)",
-  },
-
-  consoleTitle: {
-    fontSize: "18px",
-    marginBottom: "15px",
-    color: "#333",
-  },
-
-  text: {
-    fontSize: "16px",
-    margin: "8px 0",
-  },
+  container: { textAlign: "center", padding: "40px", fontFamily: "Arial" },
+  title: { fontSize: "24px", marginBottom: "20px" },
+  statusOn: { background: "#d1f7d6", padding: 10, borderRadius: 8 },
+  statusOff: { background: "#ffd6d6", padding: 10, borderRadius: 8 },
+  startBtn: { padding: 10, background: "green", color: "#fff" },
+  stopBtn: { padding: 10, background: "red", color: "#fff" },
+  console: { marginTop: 40, padding: 20, background: "#f4f6f8" },
 };
 
 export default SoundDetector;

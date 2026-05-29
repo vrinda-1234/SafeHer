@@ -1,103 +1,218 @@
 import SOS from "../models/Sos.js";
 import sendAlert from "../utils/sendAlert.js";
 
-// simple in-memory throttle (upgrade to Redis later)
-const lastUpdateMap = new Map();
+// ==========================
+// CONFIG (REAL SYSTEM STYLE)
+// ==========================
+const LOCATION_THROTTLE_MS = 20000; // 20 sec
+const SOS_COOLDOWN_MS = 60 * 1000;   // optional: 1 min anti-spam
 
-const REACT_APP_API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
+const lastLocationMap = new Map();
+const lastSOSMap = new Map();
 
-// helper: distance check (better than raw lat diff)
-const isMovementSignificant = (a, b) => {
-  if (!a || !b) return true;
-  return Math.abs(a.lat - b.lat) + Math.abs(a.lng - b.lng) > 0.0002;
-};
-
+// ==========================
+// CREATE / GET ACTIVE SOS
+// ==========================
 export const triggerSOS = async (req, res) => {
   try {
-    const { location, message, idempotencyKey } = req.body;
+    // TEMPORARY RESET
+   /* await SOS.updateMany(
+      { status: "ACTIVE" },
+      { $set: { status: "RESOLVED" } }
+    );*/
+
+    const { location, message } = req.body;
+     console.log(req.user.id);
+    if (!req.user?._id) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
 
     if (!location?.lat || !location?.lng) {
       return res.status(400).json({ message: "Location required" });
     }
+    const now = Date.now();
 
-    // ✅ IDMPOTENCY CHECK FIRST
-    if (idempotencyKey) {
-      const existing = await SOS.findOne({
-        userId: req.user._id,
-        idempotencyKey,
+    // ==========================
+    // 🔥 COOLDOWN CHECK (ANTI SPAM)
+    const userId = req.user._id; // ✅ FIX HERE
+
+    console.log("USER:", userId);
+    // ==========================
+    const lastSOS = lastSOSMap.get(userId.toString()) || 0;
+
+    if (now - lastSOS < SOS_COOLDOWN_MS) {
+      return res.status(429).json({
+        message: "⚠️ SOS cooldown active. Please wait before retrying.",
       });
-
-      if (existing) {
-        return res.status(200).json({
-          message: "SOS already exists (idempotent)",
-          sosId: existing._id,
-          trackingLink: `${REACT_APP_API_URL}/track/${existing._id}`,
-        });
-      }
     }
 
-    // ✅ ACTIVE SOS CHECK
-    const active = await SOS.findOne({
-      userId: req.user._id,
+    // ==========================
+    // 🔥 CHECK ACTIVE SOS
+    // ==========================
+    let sos = await SOS.findOne({
+      userId,
       status: "ACTIVE",
     });
 
-    if (active) {
-      return res.status(409).json({
-        message: "You already have an active SOS",
-        sosId: active._id,
-        trackingLink: `${REACT_APP_API_URL}/track/${active._id}`,
+    // ==========================
+    // CASE 1: ACTIVE SOS EXISTS
+    // ==========================
+    console.log(sos);
+    if (sos) {
+     console.log("sos exists");
+      return res.status(200).json({
+        message: "🚨 SOS already ACTIVE (using existing session)",
+        sosId: sos._id,
+        status: "ACTIVE",
       });
-    }
 
-    // ✅ CREATE SOS (race-safe due to DB index)
-    const sos = await SOS.create({
-      userId: req.user._id,
+    }
+   
+    // ==========================
+    // CASE 2: CREATE NEW SOS
+    // ==========================
+    sos = await SOS.create({
+      userId,
       location,
-      message,
+      message: message || "Emergency SOS triggered",
       status: "ACTIVE",
-      idempotencyKey,
-      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24), // 24h auto expiry
+      locationHistory: [location],
     });
+    //console.log("sos created");
+    lastSOSMap.set(userId.toString(), now);
 
-    // async alert
-    sendAlert(req.user, location.lat, location.lng).catch(console.log);
+    // ==========================
+    // SAFE ALERT (NON BLOCKING)
+    // ==========================
+    sendAlert(req.user, location.lat, location.lng).catch((err) => {
+      console.log("Alert error:", err.message);
+    });
 
     return res.status(201).json({
-      message: "SOS triggered",
+      message: "🚨 SOS CREATED SUCCESSFULLY",
       sosId: sos._id,
-      trackingLink: `${REACT_APP_API_URL}/track/${sos._id}`,
+      status: "ACTIVE",
     });
+
   } catch (error) {
     console.error("SOS ERROR:", error);
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({
+      message: "Internal server error",
+    });
   }
 };
 
-export const getMySOS = async (req, res) => {
-  const sosList = await SOS.find({ userId: req.user._id }).sort({
-    createdAt: -1,
-  });
+// ==========================
+// UPDATE LOCATION (REAL-TIME TRACKING)
+// ==========================
+export const updateLocation = async (req, res) => {
+  try {
+    const { sosId, lat, lng } = req.body;
 
-  res.json(sosList);
+    if (!sosId || lat == null || lng == null) {
+      return res.status(400).json({ message: "Invalid data" });
+    }
+
+    const now = Date.now();
+    const last = lastLocationMap.get(sosId) || 0;
+
+    // ==========================
+    // THROTTLE LOCATION UPDATES
+    // ==========================
+    if (now - last < LOCATION_THROTTLE_MS) {
+      return res.status(200).json({
+        message: "⏳ Location update throttled",
+      });
+    }
+
+    const sos = await SOS.findOne({
+      _id: sosId,
+      userId: req.user._id,
+      status: "ACTIVE",
+    });
+
+    if (!sos) {
+      return res.status(404).json({
+        message: "Active SOS not found",
+      });
+    }
+
+    // ==========================
+    // UPDATE LOCATION
+    // ==========================
+    sos.location = { lat, lng };
+
+    if (!Array.isArray(sos.locationHistory)) {
+      sos.locationHistory = [];
+    }
+
+    sos.locationHistory.push({ lat, lng });
+
+    await sos.save();
+
+    lastLocationMap.set(sosId, now);
+
+    return res.json({
+      message: "📍 Location updated",
+      sosId: sos._id,
+    });
+
+  } catch (err) {
+    console.error("Location update error:", err);
+    return res.status(500).json({
+      message: "Failed to update location",
+    });
+  }
 };
 
+// ==========================
+// RESOLVE SOS
+// ==========================
 export const resolveSOS = async (req, res) => {
-  const sos = await SOS.findOne({
-    _id: req.params.id,
-    userId: req.user._id,
-  });
+  try {
+    const sos = await SOS.findOne({
+      _id: req.params.id,
+      userId: req.user._id,
+    });
 
-  if (!sos) {
-    return res.status(404).json({ message: "SOS not found" });
+    if (!sos) {
+      return res.status(404).json({ message: "SOS not found" });
+    }
+
+    sos.status = "RESOLVED";
+    await sos.save();
+
+    return res.json({
+      message: "✅ SOS resolved successfully",
+    });
+
+  } catch (err) {
+    return res.status(500).json({
+      message: "Error resolving SOS",
+    });
   }
-
-  sos.status = "RESOLVED";
-  await sos.save();
-
-  res.json({ message: "SOS resolved" });
 };
 
+// ==========================
+// GET USER SOS HISTORY
+// ==========================
+export const getMySOS = async (req, res) => {
+  try {
+    const sosList = await SOS.find({
+      userId: req.user._id,
+    }).sort({ createdAt: -1 });
+
+    res.json(sosList);
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to fetch SOS",
+    });
+  }
+};
+
+// ==========================
+// GET SOS BY ID
+// ==========================
 export const getSOSById = async (req, res) => {
   try {
     const sos = await SOS.findById(req.params.id);
@@ -107,53 +222,7 @@ export const getSOSById = async (req, res) => {
     }
 
     res.json(sos);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-export const updateLocation = async (req, res) => {
-  try {
-    const { sosId, lat, lng } = req.body;
-
-    if (!sosId || lat == null || lng == null) {
-      return res.status(400).json({ message: "Invalid data" });
-    }
-
-    // ✅ throttle updates per user
-    const now = Date.now();
-    const last = lastUpdateMap.get(sosId) || 0;
-
-    if (now - last < 2000) {
-      return res.status(200).json({ message: "Skipped (throttled)" });
-    }
-
-    lastUpdateMap.set(sosId, now);
-
-    const sos = await SOS.findOne({
-      _id: sosId,
-      userId: req.user._id,
-      status: "ACTIVE",
-    });
-
-    if (!sos) {
-      return res.status(404).json({ message: "Active SOS not found" });
-    }
-
-    // optional: avoid useless updates
-    if (
-      !isMovementSignificant(sos.location, { lat, lng })
-    ) {
-      return res.status(200).json({ message: "No significant movement" });
-    }
-
-    sos.location = { lat, lng };
-    sos.locationHistory.push({ lat, lng });
-
-    await sos.save();
-
-    res.json({ message: "Location updated", sos });
-  } catch (error) {
-    res.status(500).json({ message: "Location update failed" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
   }
 };

@@ -14,11 +14,13 @@ const sosSchema = new mongoose.Schema(
       lng: Number,
     },
 
+    // optional message from AI or user
     message: {
       type: String,
       maxlength: 300,
     },
 
+    // 🧠 CORE STATE SYSTEM
     status: {
       type: String,
       enum: ["ACTIVE", "RESOLVED"],
@@ -26,21 +28,18 @@ const sosSchema = new mongoose.Schema(
       index: true,
     },
 
-    idempotencyKey: {
-      type: String,
-      unique: true,
-      sparse: true,
-    },
+    // 📍 tracking history (for live movement)
+    locationHistory: [
+      {
+        lat: Number,
+        lng: Number,
+      },
+    ],
   },
   { timestamps: true }
 );
 
-sosSchema.index(
-  { userId: 1, status: 1 },
-  { unique: true, partialFilterExpression: { status: "ACTIVE" } }
-);
-sosSchema.index(
-  { userId: 1, idempotencyKey: 1 },
-  { unique: true, sparse: true }
-);
+// 🔥 IMPORTANT INDEX (prevents multiple ACTIVE SOS per user)
+sosSchema.index({ userId: 1, status: 1 });
+
 export default mongoose.model("SOS", sosSchema);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import API from "../utils/api";
+import toast from "react-hot-toast";
 
 const EmergencySOS = () => {
   const FRONTEND_URL =
@@ -9,7 +10,6 @@ const EmergencySOS = () => {
   const [contacts, setContacts] = useState([]);
   const [location, setLocation] = useState(null);
   const [sosId, setSosId] = useState(null);
-  const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const [trackingLink, setTrackingLink] = useState("");
 
@@ -17,24 +17,18 @@ const EmergencySOS = () => {
   const lastLng = useRef(null);
   const watchRef = useRef(null);
 
-  // stable idempotency key
-  const idempotencyKeyRef = useRef(crypto.randomUUID());
-
   // -------------------------
   // LOAD CONTACTS
   // -------------------------
   useEffect(() => {
     const fetchContacts = async () => {
       try {
-        setLoading(true);
         const res = await API.get("/api/contact", {
           withCredentials: true,
         });
         setContacts(res.data || []);
       } catch {
-        setErrorMsg("Failed to load contacts");
-      } finally {
-        setLoading(false);
+        toast.error("Failed to load contacts");
       }
     };
 
@@ -42,20 +36,11 @@ const EmergencySOS = () => {
   }, []);
 
   // -------------------------
-  // RESET ERROR
-  // -------------------------
-  useEffect(() => {
-    setErrorMsg("");
-  }, [step]);
-
-  // -------------------------
   // GET LOCATION
   // -------------------------
   const getLocationAndConfirm = () => {
-    setErrorMsg("");
-
     if (!navigator.geolocation) {
-      setErrorMsg("Geolocation not supported");
+      toast.error("Geolocation not supported");
       return;
     }
 
@@ -67,7 +52,10 @@ const EmergencySOS = () => {
         });
         setStep("confirm");
       },
-      () => setErrorMsg("Location permission denied")
+      () => {
+        toast.error("Failed to fetch location");
+      },
+      { enableHighAccuracy: false, timeout: 10000 }
     );
   };
 
@@ -77,56 +65,47 @@ const EmergencySOS = () => {
   const startTracking = (id) => {
     if (watchRef.current !== null) return;
 
-    const watch = navigator.geolocation.watchPosition(
-      async (position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
+    watchRef.current = navigator.geolocation.watchPosition(async (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
 
-        // safer movement check
-        if (lastLat.current !== null && lastLng.current !== null) {
-          const moved =
-            Math.abs(lat - lastLat.current) + Math.abs(lng - lastLng.current);
-
-          if (moved < 0.0002) return;
-        }
-
-        lastLat.current = lat;
-        lastLng.current = lng;
-
-        setLocation({ lat, lng });
-
-        try {
-          await API.patch(
-            "/api/sos/update-location",
-            { sosId: id, lat, lng },
-            { withCredentials: true }
-          );
-        } catch (err) {
-          console.log("Location update failed:", err?.message);
-        }
-      },
-      (error) => console.log("Geolocation error:", error),
-      {
-        enableHighAccuracy: true,
-        maximumAge: 10000,
-        timeout: 5000,
+      if (
+        lastLat.current !== null &&
+        lastLng.current !== null &&
+        Math.abs(lat - lastLat.current) + Math.abs(lng - lastLng.current) <
+          0.0002
+      ) {
+        return;
       }
-    );
 
-    watchRef.current = watch;
+      lastLat.current = lat;
+      lastLng.current = lng;
+
+      setLocation({ lat, lng });
+
+      try {
+        await API.patch(
+          "/api/sos/update-location",
+          { sosId: id, lat, lng },
+          { withCredentials: true }
+        );
+      } catch (err) {
+        console.log("Location update failed");
+      }
+    });
   };
 
   // -------------------------
   // SEND SOS
   // -------------------------
   const sendSOS = async () => {
-    if (contacts.length === 0) {
-      setErrorMsg("⚠️ Add at least one emergency contact first");
+    if (!contacts.length) {
+      toast.error("Add emergency contacts first");
       return;
     }
 
     if (!location) {
-      setErrorMsg("Location not available");
+      toast.error("Location not available");
       return;
     }
 
@@ -139,42 +118,35 @@ const EmergencySOS = () => {
         "/api/sos/trigger",
         {
           location,
-          idempotencyKey: idempotencyKeyRef.current,
+          message: "Emergency SOS",
         },
         { withCredentials: true }
       );
+
+      const msg = res.data?.message;
+
+      // -------------------------
+      // HANDLE BACKEND STATES
+      // -------------------------
+      if (msg?.toLowerCase().includes("already")) {
+        toast.info("SOS already active. Tracking continues.");
+      } else if (msg?.toLowerCase().includes("cooldown")) {
+        toast.info("Please wait before sending another SOS.");
+        return;
+      } else {
+        toast.success("🚨 SOS sent successfully");
+      }
 
       const id = res.data.sosId;
 
       setSosId(id);
       setTrackingLink(`${FRONTEND_URL}/track/${id}`);
+      setStep("sent");
 
       startTracking(id);
-      setStep("sent");
-    } catch (error) {
-      const message = error.response?.data?.message;
-
-      if (message === "You already have an active SOS") {
-        const res = await API.get("/api/sos/my", {
-          withCredentials: true,
-        });
-
-        const activeSOS = res.data.find((s) => s.status === "ACTIVE");
-
-        if (activeSOS) {
-          const id = activeSOS._id;
-
-          setSosId(id);
-          setLocation(activeSOS.location);
-          setTrackingLink(`${FRONTEND_URL}/track/${id}`);
-
-          startTracking(id);
-          setStep("sent");
-        }
-        return;
-      }
-
-      setErrorMsg(message || "Failed to send SOS");
+    } catch (err) {
+      const msg = err.response?.data?.message;
+      toast.error(msg || "Failed to send SOS");
     } finally {
       setLoading(false);
     }
@@ -184,21 +156,25 @@ const EmergencySOS = () => {
   // STOP SOS
   // -------------------------
   const stopSOS = async () => {
-    if (!window.confirm("Are you sure you want to stop SOS?")) return;
+    if (!window.confirm("Stop SOS?")) return;
 
     try {
       if (sosId) {
         await API.put(
           `/api/sos/${sosId}/resolve`,
           {},
-          { withCredentials: true }
+          {
+            withCredentials: true,
+          }
         );
       }
-    } catch (err) {
-      console.log("Resolve failed:", err?.message);
+
+      toast.success("SOS resolved");
+    } catch {
+      toast.error("Failed to resolve SOS");
     }
 
-    if (watchRef.current !== null) {
+    if (watchRef.current) {
       navigator.geolocation.clearWatch(watchRef.current);
       watchRef.current = null;
     }
@@ -213,25 +189,11 @@ const EmergencySOS = () => {
   };
 
   // -------------------------
-  // CLEANUP
-  // -------------------------
-  useEffect(() => {
-    return () => {
-      if (watchRef.current !== null) {
-        navigator.geolocation.clearWatch(watchRef.current);
-      }
-    };
-  }, []);
-
-  // -------------------------
   // UI
   // -------------------------
   return (
     <div className="min-h-screen flex items-center justify-center bg-red-50 p-6">
       <div className="bg-white p-8 rounded-xl shadow max-w-md w-full text-center">
-        {errorMsg && <p className="text-red-600 text-sm mb-3">{errorMsg}</p>}
-
-        {/* IDLE */}
         {step === "idle" && (
           <>
             <h1 className="text-3xl font-bold text-red-700 mb-4">
@@ -247,7 +209,6 @@ const EmergencySOS = () => {
           </>
         )}
 
-        {/* CONFIRM */}
         {step === "confirm" && (
           <>
             <h2 className="text-xl font-bold text-red-700 mb-3">Confirm SOS</h2>
@@ -255,7 +216,7 @@ const EmergencySOS = () => {
             <button
               onClick={sendSOS}
               disabled={loading}
-              className="w-full bg-red-600 text-white py-3 rounded-xl disabled:opacity-50"
+              className="w-full bg-red-600 text-white py-3 rounded-xl"
             >
               {loading ? "Sending..." : "Confirm & Send"}
             </button>
@@ -269,7 +230,6 @@ const EmergencySOS = () => {
           </>
         )}
 
-        {/* ACTIVE */}
         {step === "sent" && (
           <>
             <h1 className="text-2xl font-bold text-green-600 mb-3">
@@ -278,26 +238,17 @@ const EmergencySOS = () => {
 
             {location && (
               <iframe
-                title="Live Location"
+                title="map"
                 width="100%"
                 height="200"
-                className="rounded-lg mb-4"
                 src={`https://maps.google.com/maps?q=${location.lat},${location.lng}&z=15&output=embed`}
               />
             )}
 
-            {trackingLink && (
-              <a
-                href={trackingLink}
-                target="_blank"
-                rel="noreferrer"
-                className="text-blue-600 text-sm block mb-3"
-              >
-                Open Tracking Page
-              </a>
-            )}
-
-            <button onClick={stopSOS} className="w-full border py-2 rounded-xl">
+            <button
+              onClick={stopSOS}
+              className="w-full border py-2 rounded-xl mt-3"
+            >
               Stop SOS
             </button>
           </>
