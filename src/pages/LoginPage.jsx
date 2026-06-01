@@ -11,7 +11,7 @@ const InputField = ({ type = "text", placeholder, value, onChange, name }) => {
       placeholder={placeholder}
       value={value}
       onChange={onChange}
-      className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 transition"
+      className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 transition"
       required
     />
   );
@@ -88,14 +88,14 @@ const Login = () => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-purple-700 text-white py-3 rounded-lg font-medium hover:bg-purple-800 transition disabled:opacity-50"
+          className="w-full bg-blue-700 text-white py-3 rounded-lg font-medium hover:bg-blue-800 transition disabled:opacity-50"
         >
           {loading ? "Logging in..." : "Login"}
         </button>
 
         <p className="text-sm text-center text-gray-600 mt-4">
           Don’t have an account?
-          <Link to="/signup" className="text-purple-600 font-medium ml-1">
+          <Link to="/signup" className="text-blue-600 font-medium ml-1">
             Sign Up
           </Link>
         </p>

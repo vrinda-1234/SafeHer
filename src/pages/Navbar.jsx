@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import logo from "../assests/logo.png"
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -41,18 +42,23 @@ const Navbar = () => {
     <>
       {/* Navbar */}
       <div className="bg-white shadow px-6 py-4 flex justify-between items-center">
-        <h1
-          className="text-xl font-bold text-purple-800 cursor-pointer"
+        <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2">
+              <img src={logo} alt="SafeHer Logo" className="h-16 w-auto" />
+            </div>
+        </div>
+        {/* <h1
+          className="text-xl font-bold text-blue-900 cursor-pointer"
           onClick={() => navigate("/dashboard")}
         >
-          SafeHer
-        </h1>
+        Safeher
+        </h1> */}
 
         {/* Profile Icon */}
         <div className="relative">
           <div
             onClick={() => setOpen(!open)}
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-purple-500 text-white font-bold cursor-pointer hover:bg-purple-600"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-pink-500 text-white font-bold cursor-pointer hover:bg-blue-900"
           >
             {getInitial()}
           </div>
@@ -60,7 +66,7 @@ const Navbar = () => {
           {/* Dropdown */}
           {open && (
             <div className="absolute right-0 mt-2 w-64 bg-white border rounded-lg shadow-lg p-4 z-50">
-              <p className="font-semibold text-purple-800">
+              <p className="font-semibold text-blue-800">
                 {user?.name || "No Name"}
               </p>
 
@@ -79,7 +85,7 @@ const Navbar = () => {
                   setShowModal(true);
                   setOpen(false);
                 }}
-                className="block w-full text-left text-sm text-gray-700 hover:text-purple-700 mb-2"
+                className="block w-full text-left text-sm text-gray-700 hover:text-blue-700 mb-2"
               >
                 Edit Profile
               </button>
@@ -99,7 +105,7 @@ const Navbar = () => {
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-xl shadow-lg w-96">
-            <h2 className="text-lg font-semibold text-purple-800 mb-4">
+            <h2 className="text-lg font-semibold text-blue-900 mb-4">
               Edit Profile
             </h2>
 
@@ -140,7 +146,7 @@ const Navbar = () => {
 
               <button
                 onClick={handleSave}
-                className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
                 Save
               </button>

@@ -33,6 +33,7 @@ def predict():
         file = request.files["file"]
 
         temp = tempfile.NamedTemporaryFile(delete=False, suffix=".webm")
+        temp.close() #abhilasha did changes here%
         file.save(temp.name)
 
         waveform, sr = librosa.load(temp.name, sr=16000)
@@ -64,6 +65,8 @@ def predict():
         })
 
     except Exception as e:
+        import traceback #abhilasha did changes
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 

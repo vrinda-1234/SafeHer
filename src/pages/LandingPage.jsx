@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import logo from "../assests/logo.png";
 import { Link } from "react-router-dom";
+import L from "../assests/L.jpg"
 function LandingPage() {
   // Smooth scroll for internal links
   useEffect(() => {
@@ -29,13 +30,13 @@ function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-4">
               <img src={logo} alt="SafeHer Logo" className="h-16 w-auto" />
             </div>
           </div>
 
           {/* Navigation */}
-          <nav className="hidden lg:flex space-x-8 font-medium text-gray-600">
+          <nav className="hidden lg:flex space-x-8 font-medium text-black">
             <a href="#home" className="hover:text-pink-500 transition-colors">
               Home
             </a>
@@ -65,13 +66,13 @@ function LandingPage() {
           {/* Action Buttons */}
           <div className="hidden md:flex space-x-3">
             <Link to="/login">
-              <button className="px-5 py-2.5 border-2 border-pink-500 text-gray-700 rounded-xl hover:text-white hover:bg-gradient-to-r hover:from-pink-500 hover:to-rose-500 transition">
+              <button className="px-5 py-2.5 border-2 border-blue-900 text-black rounded-xl hover:text-gray-700 hover:border-pink-600">
                 Login
               </button>
             </Link>
 
             <Link to="/signup">
-              <button className="px-6 py-2.5 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl shadow-lg hover:scale-105 transition">
+              <button className="px-6 py-2.5 bg-pink-500 text-white rounded-xl shadow-lg hover:bg-pink-400 ">
                 Get SafeHer
               </button>
             </Link>
@@ -80,41 +81,55 @@ function LandingPage() {
       </header>
 
       {/* HERO / HOME */}
-      <section
-        id="home"
-        className="relative min-h-screen flex flex-col justify-center items-center text-center px-4 pt-32 overflow-hidden
-             bg-gradient-to-br from-purple-300 via-pink-300 to-pink-300"
-      >
-        {/* MAIN CONTENT */}
-        <h1 className="text-5xl font-bold text-white mb-4 relative z-10">
-          Your Safety, Our Priority
-        </h1>
+<section
+  id="home"
+  className="relative min-h-screen bg-white text-black overflow-hidden"
+>
+  {/* Background Overlay */}
+  <div className="absolute inset-0 bg-black/40 z-0"></div>
 
-        <p className="text-xl text-pink-100 mb-8 max-w-xl relative z-10">
-          SafeHer uses AI and real-time monitoring to detect distress and alert
-          help before danger escalates.
-        </p>
+  <div className="relative z-10 max-w-7xl mx-auto px-6 pt-32 pb-16 h-screen flex items-center">
+    
+    {/* LEFT CONTENT */}
+    <div className="w-full lg:w-1/2">
+      <h1 className="text-5xl md:text-6xl font-bold leading-tight mb-6">
+        Your Safety,
+      <br />
+      <span className="text-blue-900 text-7xl">Our Priority</span>
+      </h1>
 
-        <div className="flex gap-4 relative z-10">
+      <p className="text-lg text-gray-600 max-w-lg mb-10">
+        SafeHer uses AI and real-time monitoring to detect distress and alert
+        help before danger escalates.
+      </p>
+
+      <div className="flex flex-wrap gap-4">
+
+      <Link to="/login">
           <button
-            className="bg-white text-pink-600 px-6 py-3 rounded-lg font-semibold
-                       hover:scale-105 transition shadow-lg"
-          >
-            Get Started
-          </button>
+          className="bg-white text-black px-6 py-3 rounded-lg font-semibold
+          hover:scale-105 transition border-2  border-blue-900  hover:border-pink-500 hover:animate-pulse
+          ">
+          Get Started
+        </button>
 
-          <a
-            href="#how-it-works"
-            className="border border-white text-white px-6 py-3 rounded-lg
-                 hover:bg-white hover:text-pink-600 transition"
-          >
-            How It Works
-          </a>
-        </div>
-      </section>
+      </Link>
 
+      </div>
+    </div>
+
+    {/* RIGHT IMAGE */}
+    <div className="hidden lg:flex w-1/2 justify-end">
+      <img
+        src={L}
+        alt="SafeHer"
+        className="h-[85vh] object-cover rounded-2xl shadow-2xl"
+      />
+    </div>
+  </div>
+</section>
       {/* PROBLEM */}
-      <section className="relative py-24 px-6 bg-gradient-to-br from-rose-50 via-white to-violet-50 overflow-hidden">
+      <section className="relative py-24 px-6 bg-purple-50">
         {/* Decorative blurred shapes */}
         <div className="absolute top-10 left-10 w-40 h-40 bg-pink-300/30 rounded-full blur-3xl"></div>
         <div className="absolute bottom-10 right-10 w-48 h-48 bg-purple-400/30 rounded-full blur-3xl"></div>
@@ -126,7 +141,7 @@ function LandingPage() {
           </span>
 
           {/* Heading */}
-          <h2 className="text-4xl md:text-5xl font-extrabold text-purple-900 mb-6 leading-tight">
+          <h2 className="text-4xl md:text-5xl font-extrabold text-blue-900 mb-6 leading-tight">
             Safety Isn’t Guaranteed.
             <span className="text-pink-500"> That’s the Problem.</span>
           </h2>
@@ -144,12 +159,12 @@ function LandingPage() {
 
         <div className="relative max-w-7xl mx-auto text-center">
           {/* Tag */}
-          <span className="inline-block mb-4 px-4 py-1 rounded-full bg-purple-100 text-purple-700 text-sm font-semibold tracking-wide">
+          <span className="inline-block mb-4 px-4 py-1 rounded-full bg-purple-100 text-blue-900 text-sm font-semibold tracking-wide">
             HOW SAFEHER PROTECTS YOU
           </span>
 
           {/* Heading */}
-          <h2 className="text-4xl md:text-5xl font-extrabold text-purple-900 mb-6">
+          <h2 className="text-4xl md:text-5xl font-extrabold text-blue-900 mb-6">
             A Smarter, Faster Way
             <span className="text-pink-500"> To Stay Safe</span>
           </h2>
@@ -166,7 +181,7 @@ function LandingPage() {
               className="group relative bg-white rounded-2xl p-8 shadow-xl border border-slate-200
                       hover:-translate-y-2 transition-all duration-300"
             >
-              <h3 className="text-xl font-semibold text-purple-900 mb-3">
+              <h3 className="text-xl font-semibold text-blue-900 mb-3">
                 AI-Powered Detection
               </h3>
 
@@ -187,7 +202,7 @@ function LandingPage() {
               className="group relative bg-white rounded-2xl p-8 shadow-xl border border-slate-200
                       hover:-translate-y-2 transition-all duration-300"
             >
-              <h3 className="text-xl font-semibold text-purple-900 mb-3">
+              <h3 className="text-xl font-semibold text-blue-900 mb-3">
                 Smart Location Tracking
               </h3>
 
@@ -199,7 +214,7 @@ function LandingPage() {
               <div
                 className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100
                         transition pointer-events-none
-                        ring-2 ring-purple-400/40"
+                        ring-2 ring-blue-900/40"
               ></div>
             </div>
 
@@ -208,7 +223,7 @@ function LandingPage() {
               className="group relative bg-white rounded-2xl p-8 shadow-xl border border-slate-200
                       hover:-translate-y-2 transition-all duration-300"
             >
-              <h3 className="text-xl font-semibold text-purple-900 mb-3">
+              <h3 className="text-xl font-semibold text-blue-900 mb-3">
                 Instant Alerts
               </h3>
 
@@ -230,7 +245,7 @@ function LandingPage() {
       {/* HOW IT WORKS */}
 
       {/* PREDICTIVE SAFETY SCORE */}
-      <section className="bg-purple-50 py-20 px-4 text-center">
+      <section  id="how-it-works"className="bg-purple-50 py-20 px-4 text-center">
         <h2 className="text-4xl font-bold text-pink-500 mb-6">
           Predictive Safety Score
         </h2>
@@ -238,12 +253,12 @@ function LandingPage() {
           Know the safety of an area before you step into it. Live data + AI
           generates a safety score to help you plan safer routes.
         </p>
-        <div className="text-6xl font-bold text-purple-700">82% Safe</div>
+        <div className="text-6xl font-bold text-blue-700">82% Safe</div>
       </section>
 
       {/* TRUST */}
-      <section className="bg-white py-20 px-4 text-center">
-        <h2 className="text-4xl font-bold text-purple-900 mb-12">
+      <section id="trust" className="bg-white py-20 px-4 text-center">
+        <h2 className="text-4xl font-bold text-blue-900 mb-12">
           Why Women Trust SafeHer
         </h2>
         <div className="grid md:grid-cols-4 gap-8 max-w-6xl mx-auto">
@@ -277,8 +292,8 @@ function LandingPage() {
       </section>
 
       {/* CONTACT */}
-      <section className="bg-white py-20 px-4 text-center">
-        <h2 className="text-4xl font-bold text-purple-900 mb-6">Contact Us</h2>
+      <section id="contact" className="bg-white py-20 px-4 text-center">
+        <h2 className="text-4xl font-bold text-blue-900 mb-6">Contact Us</h2>
         <p className="text-gray-700 mb-8">
           Questions, feedback, or support? We’re here for you.
         </p>
@@ -298,14 +313,14 @@ function LandingPage() {
             placeholder="Message"
             rows="4"
           ></textarea>
-          <button className="bg-purple-700 text-white px-6 py-3 rounded-lg hover:bg-purple-800 transition">
+          <button className="bg-blue-700 text-white px-6 py-3 rounded-lg hover:bg-blue-800 transition">
             Send Message
           </button>
         </form>
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-purple-900 text-white py-8 text-center">
+      <footer className="bg-blue-900 text-white py-8 text-center">
         <p>© 2025 SafeHer. Built with ❤️ for women’s safety.</p>
       </footer>
     </div>

@@ -28,7 +28,7 @@ const Dashboard = () => {
           onClick={() => setActive(item.key)}
           className={`p-3 rounded-lg cursor-pointer flex items-center gap-2 ${
             active === item.key
-              ? "bg-purple-200 text-purple-800"
+              ? "bg-purple-200 text-blue-900"
               : "hover:bg-gray-100"
           }`}
         >
@@ -42,7 +42,7 @@ const Dashboard = () => {
   const Home = () => (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-purple-900">
+        <h1 className="text-3xl font-bold text-blue-900">
           Welcome to SafeHer
         </h1>
         <p className="text-gray-600 mt-1">Choose an action to stay safe.</p>
@@ -84,7 +84,7 @@ const Dashboard = () => {
     >
       <h3
         className={`text-lg font-semibold ${
-          red ? "text-red-700" : "text-purple-800"
+          red ? "text-red-700" : "text-blue-800"
         }`}
       >
         {title}

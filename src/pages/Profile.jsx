@@ -26,12 +26,12 @@ const Profile = () => {
 
       {/* 👤 PROFILE HEADER */}
       <div className="bg-white p-6 rounded-2xl shadow flex items-center gap-6">
-        <div className="w-20 h-20 rounded-full bg-purple-500 text-white flex items-center justify-center text-3xl font-bold">
+        <div className="w-20 h-20 rounded-full bg-blue-500 text-white flex items-center justify-center text-3xl font-bold">
           {form.name ? form.name.charAt(0).toUpperCase() : "?"}
         </div>
 
         <div>
-          <h2 className="text-2xl font-bold text-purple-900">
+          <h2 className="text-2xl font-bold text-blue-900">
             {form.name || "Your Name"}
           </h2>
           <p className="text-gray-600">{form.email}</p>
@@ -41,7 +41,7 @@ const Profile = () => {
 
       {/* ✏️ EDIT BASIC INFO */}
       <div className="bg-white p-6 rounded-2xl shadow">
-        <h3 className="text-lg font-semibold text-purple-800 mb-4">
+        <h3 className="text-lg font-semibold text-blue-800 mb-4">
           Basic Information
         </h3>
 
@@ -110,7 +110,7 @@ const Profile = () => {
       <div className="text-right">
         <button
           onClick={handleSave}
-          className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700"
+          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
         >
           Save Changes
         </button>

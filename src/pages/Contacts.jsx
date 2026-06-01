@@ -11,7 +11,6 @@ const Contacts = () => {
   });
   const [errorMsg, setErrorMsg] = useState("");
 
-  // 🔥 FETCH CONTACTS
   const fetchContacts = async () => {
     try {
       const res = await API.get("/api/contact");
@@ -25,12 +24,10 @@ const Contacts = () => {
     fetchContacts();
   }, []);
 
-  // 🔥 HANDLE INPUT
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // 🔥 ADD CONTACT
   const handleAdd = async (e) => {
     e.preventDefault();
     setErrorMsg("");
@@ -38,14 +35,19 @@ const Contacts = () => {
     try {
       await API.post("/api/contact", form);
 
-      setForm({ name: "", phone: "", relation: "", email: "" });
-      fetchContacts(); // refresh list
+      setForm({
+        name: "",
+        phone: "",
+        relation: "",
+        email: "",
+      });
+
+      fetchContacts();
     } catch (err) {
       setErrorMsg(err.response?.data?.message || "Failed to add contact");
     }
   };
 
-  // 🔥 DELETE CONTACT
   const handleDelete = async (id) => {
     try {
       await API.delete(`/api/contact/${id}`);
@@ -56,75 +58,124 @@ const Contacts = () => {
   };
 
   return (
-    <div className="p-6 max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Emergency Contacts</h1>
+    <div className="min-h-screen bg-gray-100 py-10 px-4">
+      <div className="max-w-4xl mx-auto">
+        
 
-      {/* 🔥 ERROR */}
-      {errorMsg && <p className="text-red-600 mb-3">{errorMsg}</p>}
+        {errorMsg && (
+          <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-xl mb-6">
+            {errorMsg}
+          </div>
+        )}
 
-      {/* 🔥 ADD FORM */}
-      <form onSubmit={handleAdd} className="space-y-3 mb-6">
-        <input
-          name="name"
-          placeholder="Name"
-          value={form.name}
-          onChange={handleChange}
-          className="w-full border p-2 rounded"
-          required
-        />
+        {/* Add Contact Form */}
+        <div className="bg-white rounded-3xl shadow-lg p-6 mb-8">
+          <h2 className="text-xl font-semibold mb-5 text-gray-800">
+            Add New Contact
+          </h2>
 
-        <input
-          name="phone"
-          placeholder="Phone"
-          value={form.phone}
-          onChange={handleChange}
-          className="w-full border p-2 rounded"
-          required
-        />
-
-        <input
-          name="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={handleChange}
-          className="w-full border p-2 rounded"
-          required
-        />
-        <input
-          name="relation"
-          placeholder="Relation"
-          value={form.relation}
-          onChange={handleChange}
-          className="w-full border p-2 rounded"
-        />
-
-        <button className="w-full bg-purple-600 text-white py-2 rounded">
-          Add Contact
-        </button>
-      </form>
-
-      {/* 🔥 CONTACT LIST */}
-      <ul className="space-y-3">
-        {contacts.map((c) => (
-          <li
-            key={c._id}
-            className="flex justify-between items-center border p-3 rounded"
+          <form
+            onSubmit={handleAdd}
+            className="grid md:grid-cols-2 gap-4"
           >
-            <div>
-              <p className="font-medium">{c.name}</p>
-              <p className="text-sm text-gray-600">{c.phone}</p>
-              <p className="text-xs text-gray-400">{c.relation}</p>
-            </div>
+            <input
+              name="name"
+              placeholder=" Full Name"
+              value={form.name}
+              onChange={handleChange}
+              className="border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              required
+            />
 
-            <button
-              onClick={() => handleDelete(c._id)}
-              className="text-red-500"
-            >
-              Delete
-            </button>
-          </li>
-        ))}
-      </ul>
+            <input
+              name="phone"
+              placeholder=" Phone Number"
+              value={form.phone}
+              onChange={handleChange}
+              className="border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              required
+            />
+
+            <input
+              name="email"
+              placeholder=" Email Address"
+              value={form.email}
+              onChange={handleChange}
+              className="border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              required
+            />
+
+            <input
+              name="relation"
+              placeholder=" Relation"
+              value={form.relation}
+              onChange={handleChange}
+              className="border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            />
+
+            <div className="md:col-span-2">
+              <button
+                type="submit"
+                className="w-full bg-blue-900 hover:bg-blue-800 text-white py-3 rounded-xl font-semibold transition duration-300 shadow-md"
+              >
+                + Add Contact
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Contact List */}
+        <div>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-5">
+            Saved Contacts
+          </h2>
+
+          {contacts.length === 0 ? (
+            <div className="bg-white rounded-2xl p-8 text-center shadow">
+              <p className="text-gray-500">
+                No emergency contacts added yet.
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {contacts.map((c) => (
+                <div
+                  key={c._id}
+                  className="bg-white rounded-2xl shadow-md p-5 flex justify-between items-center hover:shadow-xl transition duration-300"
+                >
+                  <div>
+                    <h3 className="font-bold text-lg text-gray-800">
+                      {c.name}
+                    </h3>
+
+                    <p className="text-gray-600 mt-1">
+                      📞 {c.phone}
+                    </p>
+
+                    <p className="text-gray-600">
+                      ✉️ {c.email}
+                    </p>
+
+                    {c.relation && (
+                      <span className="inline-block mt-2 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm">
+                        {c.relation}
+                      </span>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => handleDelete(c._id)}
+                    className="bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-lg font-medium transition"
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+      </div>
     </div>
   );
 };

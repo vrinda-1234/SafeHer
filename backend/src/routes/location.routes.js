@@ -15,7 +15,6 @@ const router = express.Router();
 router.post("/save", protect, saveLocation);
 router.post("/save-place", protect, savePlace);
 router.get("/places", protect, getSavedPlaces);
-
 // ================= 🆓 NEARBY SAFE PLACES =================
 router.get("/nearby", async (req, res) => {
   const { lat, lng } = req.query;
@@ -26,23 +25,27 @@ router.get("/nearby", async (req, res) => {
 
   try {
     const query = `
-      [out:json];
-      (
-        node["amenity"="police"](around:2000,${lat},${lng});
-        node["amenity"="hospital"](around:2000,${lat},${lng});
-      );
-      out;
-    `;
+[out:json][timeout:25];
+(
+  node["amenity"="police"](around:5000,${lat},${lng});
+  node["amenity"="hospital"](around:5000,${lat},${lng});
+);
+out body;
+`;
 
     const response = await axios.post(
       "https://overpass-api.de/api/interpreter",
       query,
       {
-        headers: { "Content-Type": "text/plain" },
+        headers: {
+          "Content-Type": "text/plain",
+          "User-Agent": "SafeHer/1.0",
+        },
+        timeout: 15000,
       }
     );
 
-    const places = response.data.elements.map((p) => ({
+    const places = (response.data.elements || []).map((p) => ({
       name: p.tags?.name || "Unnamed Place",
       lat: p.lat,
       lng: p.lon,
@@ -51,8 +54,14 @@ router.get("/nearby", async (req, res) => {
 
     res.json(places);
   } catch (err) {
-    console.error("Overpass Error:", err.message);
-    res.status(500).json({ error: "Failed to fetch nearby places" });
+    console.error(
+      "Overpass Error:",
+      err.response?.status,
+      err.response?.data || err.message
+    );
+
+    // Return empty array instead of crashing frontend
+    res.json([]);
   }
 });
 

@@ -309,47 +309,281 @@ const SoundDetector = () => {
     setLastStatus("Monitoring stopped");
   };
 
-  return (
-    <div style={styles.container}>
-      <h2 style={styles.title}>🛡️ SafeHer AI Monitoring</h2>
+  // return (
+  //   <div style={styles.container}>
+  //     <h2 style={styles.title}>🛡️ SafeHer AI Monitoring</h2>
 
-      <div style={recording ? styles.statusOn : styles.statusOff}>
-        {recording ? "🟢 LIVE MONITORING ACTIVE" : "🔴 STOPPED"}
+  //     <div style={recording ? styles.statusOn : styles.statusOff}>
+  //       {recording ? "🟢 LIVE MONITORING ACTIVE" : "🔴 STOPPED"}
+  //     </div>
+
+  //     <div style={{ marginTop: 20 }}>
+  //       {!recording ? (
+  //         <button style={styles.startBtn} onClick={startMonitoring}>
+  //           ▶ Start Monitoring
+  //         </button>
+  //       ) : (
+  //         <button style={styles.stopBtn} onClick={stopMonitoring}>
+  //           ⛔ Stop Monitoring
+  //         </button>
+  //       )}
+  //     </div>
+
+  //     <div style={styles.console}>
+  //       <h3>📊 Live Console</h3>
+  //       <p>
+  //         <b>Status:</b> {lastStatus}
+  //       </p>
+  //       <p>
+  //         <b>Danger Score:</b> {dangerCount}
+  //       </p>
+  //     </div>
+  //   </div>
+  // );
+  return (
+  <div style={styles.page}>
+    <div style={styles.card}>
+
+      <div
+        style={
+          recording
+            ? styles.statusCardActive
+            : styles.statusCardInactive
+        }
+      >
+        <div style={styles.statusDot}></div>
+
+        <div>
+          <h3 style={styles.statusTitle}>
+            {recording
+              ? "LIVE MONITORING ACTIVE"
+              : "MONITORING STOPPED"}
+          </h3>
+
+          <p style={styles.statusText}>
+            {recording
+              ? "AI is listening for potential danger signals."
+              : "Start monitoring to activate AI protection."}
+          </p>
+        </div>
       </div>
 
-      <div style={{ marginTop: 20 }}>
+      <div style={styles.buttonContainer}>
         {!recording ? (
-          <button style={styles.startBtn} onClick={startMonitoring}>
-            ▶ Start Monitoring
+          <button
+            style={styles.startBtn}
+            onClick={startMonitoring}
+          >
+             Start Monitoring
           </button>
         ) : (
-          <button style={styles.stopBtn} onClick={stopMonitoring}>
+          <button
+            style={styles.stopBtn}
+            onClick={stopMonitoring}
+          >
             ⛔ Stop Monitoring
           </button>
         )}
       </div>
 
+      <div style={styles.statsGrid}>
+        <div style={styles.statCard}>
+          <span style={styles.statLabel}>Current Status</span>
+          <span style={styles.statValue}>{lastStatus}</span>
+        </div>
+
+        <div style={styles.statCard}>
+          <span style={styles.statLabel}>Danger Score</span>
+          <span style={styles.dangerValue}>{dangerCount}</span>
+        </div>
+      </div>
+
       <div style={styles.console}>
-        <h3>📊 Live Console</h3>
-        <p>
-          <b>Status:</b> {lastStatus}
-        </p>
-        <p>
-          <b>Danger Score:</b> {dangerCount}
-        </p>
+        <h3 style={styles.consoleTitle}>📊 Live Console</h3>
+
+        <div style={styles.consoleRow}>
+          <span>Status</span>
+          <strong>{lastStatus}</strong>
+        </div>
+
+        <div style={styles.consoleRow}>
+          <span>Danger Score</span>
+          <strong>{dangerCount}</strong>
+        </div>
+
+        <div style={styles.consoleRow}>
+          <span>Monitoring</span>
+          <strong>
+            {recording ? "🟢 Active" : "🔴 Inactive"}
+          </strong>
+        </div>
       </div>
     </div>
-  );
+  </div>
+);
 };
 
+// const styles = {
+//   container: { textAlign: "center", padding: "40px", fontFamily: "Arial" },
+//   title: { fontSize: "24px", marginBottom: "20px" },
+//   statusOn: { background: "#d1f7d6", padding: 10, borderRadius: 8 },
+//   statusOff: { background: "#ffd6d6", padding: 10, borderRadius: 8 },
+//   startBtn: { padding: 10, background: "green", color: "#fff" },
+//   stopBtn: { padding: 10, background: "red", color: "#fff" },
+//   console: { marginTop: 40, padding: 20, background: "#f4f6f8" },
+// };
 const styles = {
-  container: { textAlign: "center", padding: "40px", fontFamily: "Arial" },
-  title: { fontSize: "24px", marginBottom: "20px" },
-  statusOn: { background: "#d1f7d6", padding: 10, borderRadius: 8 },
-  statusOff: { background: "#ffd6d6", padding: 10, borderRadius: 8 },
-  startBtn: { padding: 10, background: "green", color: "#fff" },
-  stopBtn: { padding: 10, background: "red", color: "#fff" },
-  console: { marginTop: 40, padding: 20, background: "#f4f6f8" },
+page: {
+  minHeight: "100vh",
+  padding: "30px",
+},
+
+card: {
+  width: "100%",
+  // background: "#fff",
+  borderRadius: "24px",
+  padding: "32px",
+  // boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+},
+
+  header: {
+    textAlign: "center",
+    marginBottom: "30px",
+  },
+
+  title: {
+    fontSize: "30px",
+    fontWeight: "700",
+    color: "#1f2937",
+    marginBottom: "10px",
+  },
+
+  subtitle: {
+    color: "#6b7280",
+    fontSize: "15px",
+  },
+
+  statusCardActive: {
+    display: "flex",
+    alignItems: "center",
+    gap: "15px",
+    background: "#ecfdf5",
+    border: "1px solid #86efac",
+    borderRadius: "16px",
+    padding: "18px",
+    marginBottom: "25px",
+  },
+
+  statusCardInactive: {
+    display: "flex",
+    alignItems: "center",
+    gap: "15px",
+    background: "#fef2f2",
+    border: "1px solid #fca5a5",
+    borderRadius: "16px",
+    padding: "18px",
+    marginBottom: "25px",
+  },
+
+  statusDot: {
+    width: "14px",
+    height: "14px",
+    borderRadius: "50%",
+    background: "#22c55e",
+  },
+
+  statusTitle: {
+    margin: 0,
+    fontSize: "16px",
+    fontWeight: "600",
+  },
+
+  statusText: {
+    margin: "4px 0 0",
+    color: "#6b7280",
+    fontSize: "14px",
+  },
+
+  buttonContainer: {
+    textAlign: "center",
+    marginBottom: "25px",
+  },
+
+  startBtn: {
+    background: "#16a34a",
+    color: "#fff",
+    border: "none",
+    borderRadius: "12px",
+    padding: "14px 28px",
+    fontSize: "16px",
+    fontWeight: "600",
+    cursor: "pointer",
+  },
+
+  stopBtn: {
+    background: "#dc2626",
+    color: "#fff",
+    border: "none",
+    borderRadius: "12px",
+    padding: "14px 28px",
+    fontSize: "16px",
+    fontWeight: "600",
+    cursor: "pointer",
+  },
+
+  statsGrid: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "15px",
+    marginBottom: "25px",
+  },
+
+  statCard: {
+    background: "#fff",
+    borderRadius: "16px",
+    padding: "20px",
+    textAlign: "center",
+    border: "1px solid #e5e7eb",
+  },
+
+  statLabel: {
+    display: "block",
+    color: "#6b7280",
+    marginBottom: "8px",
+    fontSize: "14px",
+  },
+
+  statValue: {
+    fontWeight: "700",
+    fontSize: "16px",
+    color: "#111827",
+  },
+
+  dangerValue: {
+    fontWeight: "700",
+    fontSize: "28px",
+    color: "#dc2626",
+  },
+
+  console: {
+    background: "#fff",
+    borderRadius: "18px",
+    padding: "20px",
+    border: "1px solid #e5e7eb",
+  },
+
+  consoleTitle: {
+    marginTop: 0,
+    marginBottom: "18px",
+    color: "#1f2937",
+  },
+
+  consoleRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    padding: "10px 0",
+    borderBottom: "1px solid #e5e7eb",
+  },
 };
 
 export default SoundDetector;
