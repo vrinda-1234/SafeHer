@@ -80,7 +80,7 @@ const Navbar = () => {
 
               <hr className="my-3" />
 
-              <button
+              {/* <button
                 onClick={() => {
                   setShowModal(true);
                   setOpen(false);
@@ -88,7 +88,7 @@ const Navbar = () => {
                 className="block w-full text-left text-sm text-gray-700 hover:text-blue-700 mb-2"
               >
                 Edit Profile
-              </button>
+              </button> */}
 
               <button
                 onClick={handleLogout}

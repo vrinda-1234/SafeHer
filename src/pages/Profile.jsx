@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import API from "../utils/api";
 
 const Profile = () => {
   const { user, setUser } = useAuth();
@@ -13,12 +14,23 @@ const Profile = () => {
   });
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
   };
 
-  const handleSave = () => {
-    setUser(form);
-    alert("Profile updated!");
+  const handleSave = async () => {
+    try {
+      const res = await API.put("/api/profile", form);
+
+      setUser(res.data);
+
+      alert("Profile updated successfully!");
+    } catch (err) {
+      console.error("Profile update error:", err);
+      alert("Profile update failed!");
+    }
   };
 
   return (
@@ -39,7 +51,7 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* ✏️ EDIT BASIC INFO */}
+      {/* ✏️ BASIC INFO */}
       <div className="bg-white p-6 rounded-2xl shadow">
         <h3 className="text-lg font-semibold text-blue-800 mb-4">
           Basic Information
@@ -56,13 +68,13 @@ const Profile = () => {
             className="border p-2 rounded"
           />
 
+          {/* Email visible but not editable */}
           <input
             type="email"
             name="email"
             value={form.email}
-            onChange={handleChange}
-            placeholder="Email"
-            className="border p-2 rounded"
+            disabled
+            className="border p-2 rounded bg-gray-100 cursor-not-allowed"
           />
 
           <input
@@ -115,6 +127,7 @@ const Profile = () => {
           Save Changes
         </button>
       </div>
+
     </div>
   );
 };

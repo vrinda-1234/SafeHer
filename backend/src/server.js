@@ -8,7 +8,7 @@ import sosRoutes from "./routes/sos.routes.js";
 import contactRoutes from "./routes/contact.routes.js";
 import cookieParser from "cookie-parser";
 import locationRoutes from "./routes/location.routes.js";
-
+import profileRoutes from "./routes/profile.routes.js";
 
 connectDB();
 
@@ -27,6 +27,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/sos", sosRoutes);
 app.use("/api/contact", contactRoutes);     
 app.use("/api/location", locationRoutes);
+app.use("/api/profile", profileRoutes);
 app.get("/", (req, res) => {
   res.send("SafeHer backend running 🚀");
 });

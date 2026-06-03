@@ -6,6 +6,7 @@ import Profile from "../pages/Profile";
 import EmergencySOS from "./EmergencySOS";
 import Contacts from "./Contacts";
 import AIThreatDetection from "./AIThreatDetection";
+import Settings from "./Settings";
 const Dashboard = () => {
   const [active, setActive] = useState("dashboard");
   // const navigate = useNavigate();
@@ -151,14 +152,14 @@ const Dashboard = () => {
     </div>
   );
 
-  const Settings = () => (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">Account Settings</h1>
-      <div className="bg-white p-6 rounded-xl shadow">
-        Update your profile here.
-      </div>
-    </div>
-  );
+  // const Settings = () => (
+  //   <div>
+  //     <h1 className="text-2xl font-bold mb-6">Account Settings</h1>
+  //     <div className="bg-white p-6 rounded-xl shadow">
+  //       Update your profile here.
+  //     </div>
+  //   </div>
+  // );
 
   // 🔹 Switch
   const renderContent = () => {
