@@ -53,3 +53,70 @@ export const getSavedPlaces = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+export const deletePlace = async (
+  req,
+  res
+) => {
+  try {
+
+    const place =
+      await SavedLocation.findOne({
+        _id:req.params.id,
+        userId:req.user._id,
+      });
+
+    if(!place){
+      return res.status(404).json({
+        message:"Place not found",
+      });
+    }
+
+    await place.deleteOne();
+
+    res.json({
+      message:"Place deleted",
+    });
+
+  } catch(err){
+    res.status(500).json({
+      message:err.message,
+    });
+  }
+};
+export const updatePlace = async (
+  req,
+  res
+) => {
+  try {
+
+    const place =
+      await SavedLocation.findOne({
+        _id:req.params.id,
+        userId:req.user._id,
+      });
+
+    if(!place){
+      return res.status(404).json({
+        message:"Place not found",
+      });
+    }
+
+    place.label =
+      req.body.label || place.label;
+
+    place.latitude =
+      req.body.latitude || place.latitude;
+
+    place.longitude =
+      req.body.longitude || place.longitude;
+
+    await place.save();
+
+    res.json(place);
+
+  } catch(err){
+    res.status(500).json({
+      message:err.message,
+    });
+  }
+};

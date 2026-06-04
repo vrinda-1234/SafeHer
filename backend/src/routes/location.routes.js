@@ -5,6 +5,8 @@ import {
   saveLocation,
   savePlace,
   getSavedPlaces,
+  updatePlace,
+  deletePlace,
 } from "../controllers/location.controller.js";
 
 import { protect } from "../middleware/auth.middleware.js";
@@ -15,6 +17,17 @@ const router = express.Router();
 router.post("/save", protect, saveLocation);
 router.post("/save-place", protect, savePlace);
 router.get("/places", protect, getSavedPlaces);
+router.put(
+  "/places/:id",
+  protect,
+  updatePlace
+);
+
+router.delete(
+  "/places/:id",
+  protect,
+  deletePlace
+);
 // ================= 🆓 NEARBY SAFE PLACES =================
 router.get("/nearby", async (req, res) => {
   const { lat, lng } = req.query;

@@ -45,3 +45,50 @@ export const deleteContact = async (req, res) => {
       res.status(500).json({ message: err.message });
     }
   };
+  export const updateContact = async (
+    req,
+    res
+  ) => {
+    try {
+  
+      const contact =
+        await Contact.findById(req.params.id);
+  
+      if(!contact){
+        return res.status(404).json({
+          message:"Contact not found",
+        });
+      }
+  
+      if(
+        contact.userId.toString()
+        !==
+        req.user._id.toString()
+      ){
+        return res.status(403).json({
+          message:"Not authorized",
+        });
+      }
+  
+      contact.name =
+        req.body.name || contact.name;
+  
+      contact.phone =
+        req.body.phone || contact.phone;
+  
+      contact.email =
+        req.body.email || contact.email;
+  
+      contact.relation =
+        req.body.relation || contact.relation;
+  
+      await contact.save();
+  
+      res.json(contact);
+  
+    } catch(err){
+      res.status(500).json({
+        message:err.message,
+      });
+    }
+  };

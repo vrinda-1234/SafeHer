@@ -10,6 +10,7 @@ const Contacts = () => {
     email: "",
   });
   const [errorMsg, setErrorMsg] = useState("");
+  const [editingId, setEditingId] = useState(null);
 
   const fetchContacts = async () => {
     try {
@@ -33,7 +34,13 @@ const Contacts = () => {
     setErrorMsg("");
 
     try {
-      await API.post("/api/contact", form);
+      if (editingId) {
+        await API.put(`/api/contact/${editingId}`, form);
+
+        setEditingId(null);
+      } else {
+        await API.post("/api/contact", form);
+      }
 
       setForm({
         name: "",
@@ -44,7 +51,7 @@ const Contacts = () => {
 
       fetchContacts();
     } catch (err) {
-      setErrorMsg(err.response?.data?.message || "Failed to add contact");
+      setErrorMsg(err.response?.data?.message || "Failed to save contact");
     }
   };
 
@@ -56,12 +63,19 @@ const Contacts = () => {
       setErrorMsg("Delete failed");
     }
   };
+  const handleEdit = (contact) => {
+    setEditingId(contact._id);
 
+    setForm({
+      name: contact.name,
+      phone: contact.phone,
+      email: contact.email,
+      relation: contact.relation || "",
+    });
+  };
   return (
     <div className="min-h-screen bg-gray-100 py-10 px-4">
       <div className="max-w-4xl mx-auto">
-        
-
         {errorMsg && (
           <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-xl mb-6">
             {errorMsg}
@@ -74,10 +88,7 @@ const Contacts = () => {
             Add New Contact
           </h2>
 
-          <form
-            onSubmit={handleAdd}
-            className="grid md:grid-cols-2 gap-4"
-          >
+          <form onSubmit={handleAdd} className="grid md:grid-cols-2 gap-4">
             <input
               name="name"
               placeholder=" Full Name"
@@ -118,7 +129,7 @@ const Contacts = () => {
                 type="submit"
                 className="w-full bg-blue-900 hover:bg-blue-800 text-white py-3 rounded-xl font-semibold transition duration-300 shadow-md"
               >
-                + Add Contact
+                {editingId ? "Update Contact" : "+ Add Contact"}
               </button>
             </div>
           </form>
@@ -132,9 +143,7 @@ const Contacts = () => {
 
           {contacts.length === 0 ? (
             <div className="bg-white rounded-2xl p-8 text-center shadow">
-              <p className="text-gray-500">
-                No emergency contacts added yet.
-              </p>
+              <p className="text-gray-500">No emergency contacts added yet.</p>
             </div>
           ) : (
             <div className="grid gap-4">
@@ -148,13 +157,9 @@ const Contacts = () => {
                       {c.name}
                     </h3>
 
-                    <p className="text-gray-600 mt-1">
-                      📞 {c.phone}
-                    </p>
+                    <p className="text-gray-600 mt-1">📞 {c.phone}</p>
 
-                    <p className="text-gray-600">
-                      ✉️ {c.email}
-                    </p>
+                    <p className="text-gray-600">✉️ {c.email}</p>
 
                     {c.relation && (
                       <span className="inline-block mt-2 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm">
@@ -163,18 +168,26 @@ const Contacts = () => {
                     )}
                   </div>
 
-                  <button
-                    onClick={() => handleDelete(c._id)}
-                    className="bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-lg font-medium transition"
-                  >
-                    Delete
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEdit(c)}
+                      className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-lg"
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      onClick={() => handleDelete(c._id)}
+                      className="bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-lg"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </div>
-
       </div>
     </div>
   );

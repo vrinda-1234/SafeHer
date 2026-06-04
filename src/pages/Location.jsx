@@ -8,7 +8,8 @@ const Location = () => {
   const [label, setLabel] = useState("");
   const [safetyStatus, setSafetyStatus] = useState("Checking...");
   const [tracking, setTracking] = useState(true);
-
+  const [editingPlace, setEditingPlace] = useState(null);
+  const [editLabel, setEditLabel] = useState("");
   const [mapUrl, setMapUrl] = useState(
     "https://maps.google.com/maps?q=25.4920,81.8630&z=15&output=embed"
   );
@@ -52,9 +53,7 @@ const Location = () => {
   // 🔥 FETCH NEARBY SAFE PLACES
   const fetchNearby = async (lat, lng) => {
     try {
-      const res = await API.get(
-        `/api/location/nearby?lat=${lat}&lng=${lng}`
-      );
+      const res = await API.get(`/api/location/nearby?lat=${lat}&lng=${lng}`);
 
       setNearbyPlaces(res.data);
       calculateSafety(res.data, lat, lng);
@@ -113,15 +112,40 @@ const Location = () => {
       console.error(err);
     }
   };
+  const deletePlace = async (id) => {
+    try {
+      await API.delete(`/api/location/places/${id}`);
 
+      fetchSavedPlaces();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+  const startEditPlace = (place) => {
+    setEditingPlace(place._id);
+    setEditLabel(place.label);
+  };
+  const updatePlace = async (place) => {
+    try {
+      await API.put(`/api/location/places/${place._id}`, {
+        label: editLabel,
+        latitude: place.latitude,
+        longitude: place.longitude,
+      });
+
+      setEditingPlace(null);
+      setEditLabel("");
+
+      fetchSavedPlaces();
+    } catch (err) {
+      console.error(err);
+    }
+  };
   if (!position) return <p>📍 Getting location...</p>;
 
   return (
     <div className="p-6 space-y-6">
-
-      <h1 className="text-3xl font-bold text-blue-900">
-        📍 Live Location
-      </h1>
+      <h1 className="text-3xl font-bold text-blue-900">📍 Live Location</h1>
 
       {/* 🛡️ SAFETY */}
       <div
@@ -164,12 +188,7 @@ const Location = () => {
         <h2 className="font-semibold mb-2">Nearby Safe Places</h2>
 
         {nearbyPlaces.map((p, i) => {
-          const dist = getDistance(
-            position[0],
-            position[1],
-            p.lat,
-            p.lng
-          );
+          const dist = getDistance(position[0], position[1], p.lat, p.lng);
 
           return (
             <p key={i}>
@@ -196,9 +215,63 @@ const Location = () => {
             );
 
             return (
-              <p key={p._id}>
-                📌 {p.label} - {dist.toFixed(2)} km
-              </p>
+              <div
+                key={p._id}
+                className="flex justify-between items-center border-b py-2"
+              >
+                <div>
+                  {editingPlace === p._id ? (
+                    <input
+                      value={editLabel}
+                      onChange={(e) => setEditLabel(e.target.value)}
+                      className="border p-1 rounded"
+                    />
+                  ) : (
+                    <p>
+                      📌 {p.label} - {dist.toFixed(2)} km
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex gap-2">
+                  {editingPlace === p._id ? (
+                    <>
+                      <button
+                        onClick={() => updatePlace(p)}
+                        className="bg-green-500 text-white px-3 py-1 rounded"
+                      >
+                        Save
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setEditingPlace(null);
+                          setEditLabel("");
+                        }}
+                        className="bg-gray-400 text-white px-3 py-1 rounded"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => startEditPlace(p)}
+                        className="bg-blue-500 text-white px-3 py-1 rounded"
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        onClick={() => deletePlace(p._id)}
+                        className="bg-red-500 text-white px-3 py-1 rounded"
+                      >
+                        Delete
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
             );
           })
         )}
