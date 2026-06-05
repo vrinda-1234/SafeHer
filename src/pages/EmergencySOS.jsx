@@ -63,37 +63,94 @@ const EmergencySOS = () => {
   // LIVE TRACKING
   // -------------------------
   const startTracking = (id) => {
-    if (watchRef.current !== null) return;
+    if (watchRef.current) return;
 
-    watchRef.current = navigator.geolocation.watchPosition(async (pos) => {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
+    let lastSentTime = 0;
+    const MIN_INTERVAL = 3000; // 3 sec
+    const MIN_DISTANCE = 0.00015; // ~10–15 meters
 
-      if (
-        lastLat.current !== null &&
-        lastLng.current !== null &&
-        Math.abs(lat - lastLat.current) + Math.abs(lng - lastLng.current) <
-          0.0002
-      ) {
-        return;
+    watchRef.current = navigator.geolocation.watchPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+
+        const now = Date.now();
+
+        // initial case
+        if (!lastLat.current || !lastLng.current) {
+          lastLat.current = lat;
+          lastLng.current = lng;
+        }
+
+        // distance check (simple)
+        const distance =
+          Math.abs(lat - lastLat.current) + Math.abs(lng - lastLng.current);
+
+        // throttle condition
+        if (now - lastSentTime < MIN_INTERVAL || distance < MIN_DISTANCE) {
+          return;
+        }
+
+        lastLat.current = lat;
+        lastLng.current = lng;
+        lastSentTime = now;
+
+        setLocation({ lat, lng });
+
+        try {
+          await API.patch(
+            "/api/sos/update-location",
+            {
+              sosId: id,
+              lat,
+              lng,
+            },
+            { withCredentials: true }
+          );
+        } catch (err) {
+          console.log("Location update failed");
+        }
+      },
+      (err) => console.log("GPS error:", err),
+      {
+        enableHighAccuracy: true,
+        maximumAge: 1000,
+        timeout: 10000,
       }
-
-      lastLat.current = lat;
-      lastLng.current = lng;
-
-      setLocation({ lat, lng });
-
-      try {
-        await API.patch(
-          "/api/sos/update-location",
-          { sosId: id, lat, lng },
-          { withCredentials: true }
-        );
-      } catch (err) {
-        console.log("Location update failed");
-      }
-    });
+    );
   };
+  // const startTracking = (id) => {
+  //   if (watchRef.current !== null) return;
+
+  //   watchRef.current = navigator.geolocation.watchPosition(async (pos) => {
+  //     const lat = pos.coords.latitude;
+  //     const lng = pos.coords.longitude;
+
+  //     if (
+  //       lastLat.current !== null &&
+  //       lastLng.current !== null &&
+  //       Math.abs(lat - lastLat.current) + Math.abs(lng - lastLng.current) <
+  //         0.0002
+  //     ) {
+  //       return;
+  //     }
+
+  //     lastLat.current = lat;
+  //     lastLng.current = lng;
+
+  //     setLocation({ lat, lng });
+
+  //     try {
+  //       await API.patch(
+  //         "/api/sos/update-location",
+  //         { sosId: id, lat, lng },
+  //         { withCredentials: true }
+  //       );
+  //     } catch (err) {
+  //       console.log("Location update failed");
+  //     }
+  //   });
+  // };
 
   // -------------------------
   // SEND SOS
@@ -140,10 +197,10 @@ const EmergencySOS = () => {
       const id = res.data.sosId;
 
       setSosId(id);
-      setTrackingLink(`${FRONTEND_URL}/track/${id}`);
-      setStep("sent");
-
+      const trackingUrl = `${FRONTEND_URL}/track/${id}`;
+      setTrackingLink(trackingUrl);
       startTracking(id);
+      setStep("sent");
     } catch (err) {
       const msg = err.response?.data?.message;
       toast.error(msg || "Failed to send SOS");
@@ -173,11 +230,14 @@ const EmergencySOS = () => {
     } catch {
       toast.error("Failed to resolve SOS");
     }
-
     if (watchRef.current) {
       navigator.geolocation.clearWatch(watchRef.current);
       watchRef.current = null;
     }
+    // if (watchRef.current) {
+    //   navigator.geolocation.clearWatch(watchRef.current);
+    //   watchRef.current = null;
+    // }
 
     setStep("idle");
     setSosId(null);

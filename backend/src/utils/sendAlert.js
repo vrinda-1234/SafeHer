@@ -12,8 +12,9 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS,
   },
 });
-const sendAlert = async (user, lat, lng) => {
+const sendAlert = async (user, lat, lng,sosId) => {
   try {
+    const trackingUrl = `${process.env.FRONTEND_URL}/track/${sosId}`;
     const contacts = await Contact.find({ userId: user._id });
 
     if (!contacts.length) {
@@ -25,8 +26,9 @@ const sendAlert = async (user, lat, lng) => {
 🚨 EMERGENCY ALERT 🚨
 
 ${user.name} needs help!
-
-Location:
+📍 Live Tracking Link:
+${trackingUrl}
+Current Location:
 https://maps.google.com/?q=${lat},${lng}
 `;
 

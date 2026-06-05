@@ -4,7 +4,7 @@ import sendAlert from "../utils/sendAlert.js";
 // ==========================
 // CONFIG (REAL SYSTEM STYLE)
 // ==========================
-const LOCATION_THROTTLE_MS = 20000; // 20 sec
+const LOCATION_THROTTLE_MS = 1000;//20000; // 20 sec
 const SOS_COOLDOWN_MS = 60 * 1000;   // optional: 1 min anti-spam
 
 const lastLocationMap = new Map();
@@ -57,7 +57,6 @@ export const triggerSOS = async (req, res) => {
     // ==========================
     // CASE 1: ACTIVE SOS EXISTS
     // ==========================
-    console.log(sos);
     if (sos) {
      console.log("sos exists");
       return res.status(200).json({
@@ -84,7 +83,7 @@ export const triggerSOS = async (req, res) => {
     // ==========================
     // SAFE ALERT (NON BLOCKING)
     // ==========================
-    sendAlert(req.user, location.lat, location.lng).catch((err) => {
+    sendAlert(req.user, location.lat, location.lng,sos._id).catch((err) => {
       console.log("Alert error:", err.message);
     });
 
@@ -106,6 +105,7 @@ export const triggerSOS = async (req, res) => {
 // UPDATE LOCATION (REAL-TIME TRACKING)
 // ==========================
 export const updateLocation = async (req, res) => {
+  console.log("📍 UPDATE LOCATION HIT");
   try {
     const { sosId, lat, lng } = req.body;
 
@@ -116,9 +116,7 @@ export const updateLocation = async (req, res) => {
     const now = Date.now();
     const last = lastLocationMap.get(sosId) || 0;
 
-    // ==========================
-    // THROTTLE LOCATION UPDATES
-    // ==========================
+    // throttle
     if (now - last < LOCATION_THROTTLE_MS) {
       return res.status(200).json({
         message: "⏳ Location update throttled",
@@ -137,9 +135,7 @@ export const updateLocation = async (req, res) => {
       });
     }
 
-    // ==========================
-    // UPDATE LOCATION
-    // ==========================
+    // update DB
     sos.location = { lat, lng };
 
     if (!Array.isArray(sos.locationHistory)) {
@@ -152,8 +148,21 @@ export const updateLocation = async (req, res) => {
 
     lastLocationMap.set(sosId, now);
 
+    // ==========================
+    // 🔥 SOCKET REAL-TIME EMIT (NEW PART)
+    // ==========================
+    const io = req.app.get("io");
+    console.log("EMITTING TO ROOM:", sosId);
+
+    io.to(sosId).emit("locationUpdated", {
+      sosId,
+      lat,
+      lng,
+      timestamp: now,
+    });
+
     return res.json({
-      message: "📍 Location updated",
+      message: "📍 Location updated + emitted",
       sosId: sos._id,
     });
 
@@ -164,7 +173,6 @@ export const updateLocation = async (req, res) => {
     });
   }
 };
-
 // ==========================
 // RESOLVE SOS
 // ==========================

@@ -1,7 +1,9 @@
 import "leaflet/dist/leaflet.css";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import React from "react";
+import React, { useEffect } from "react";
 import { Toaster } from "react-hot-toast";
+
+import socket from "./socket"; // 🔥 ADD THIS
 
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
@@ -18,11 +20,10 @@ import AIThreatDetection from "./pages/AIThreatDetection";
 import { AuthProvider } from "./context/AuthContext";
 
 export default function App() {
+
   return (
     <AuthProvider>
       <Router>
-
-        {/* ✅ TOAST SYSTEM (GLOBAL - REQUIRED) */}
         <Toaster position="top-right" />
 
         <Routes>

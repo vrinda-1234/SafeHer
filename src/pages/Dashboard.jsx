@@ -43,9 +43,7 @@ const Dashboard = () => {
   const Home = () => (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-blue-900">
-          Welcome to SafeHer
-        </h1>
+        <h1 className="text-3xl font-bold text-blue-900">Welcome to SafeHer</h1>
         <p className="text-gray-600 mt-1">Choose an action to stay safe.</p>
       </div>
 
