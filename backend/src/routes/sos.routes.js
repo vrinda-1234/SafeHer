@@ -27,7 +27,7 @@ router.post(
 router.get("/my", protect, getMySOS);
 
 // 🔍 GET SOS BY ID
-router.get("/:id", protect, getSOSById);
+router.get("/public/:id",getSOSById);
 
 // ✅ RESOLVE SOS
 router.put("/:id/resolve", protect, resolveSOS);

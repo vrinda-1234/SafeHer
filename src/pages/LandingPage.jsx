@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import logo from "../assests/logo.png";
 import { Link } from "react-router-dom";
 import L from "../assests/L.jpg"
+import SafeHerSection from "../components/HowtouseSection/Howtousesection";
 function LandingPage() {
   // Smooth scroll for internal links
   useEffect(() => {
@@ -243,18 +244,11 @@ function LandingPage() {
       </section>
 
       {/* HOW IT WORKS */}
-
-      {/* PREDICTIVE SAFETY SCORE */}
-      <section  id="how-it-works"className="bg-purple-50 py-20 px-4 text-center">
-        <h2 className="text-4xl font-bold text-pink-500 mb-6">
-          Predictive Safety Score
-        </h2>
-        <p className="text-lg text-gray-700 mb-8 max-w-2xl mx-auto">
-          Know the safety of an area before you step into it. Live data + AI
-          generates a safety score to help you plan safer routes.
-        </p>
-        <div className="text-6xl font-bold text-blue-700">82% Safe</div>
-      </section>
+<section id="how-it-works" className=" min-h-[500px] w-full">
+  <div className="w-full h-full">
+    <SafeHerSection />
+  </div>
+</section>
 
       {/* TRUST */}
       <section id="trust" className="bg-white py-20 px-4 text-center">

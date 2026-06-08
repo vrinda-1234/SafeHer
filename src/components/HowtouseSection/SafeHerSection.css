@@ -1,0 +1,82 @@
+.safeher-section {
+    min-height: 500px;
+  background: linear-gradient(160deg, #1e3a8a, #1e3a8a);
+  padding: 80px;
+  display: flex;
+  gap: 40px;
+  color: white;
+  overflow: hidden;
+  font-family: "DM Sans", sans-serif;
+}
+
+.left-col {
+  padding-top:20px;
+  width: 220px;
+}
+
+.underline-bar {
+  width: 200px;
+  height: 3px;
+  background: #e91e8c;
+  margin-top: 10px;
+}
+
+.cards-wrapper {
+  overflow: hidden;
+  flex: 1;
+}
+
+.cards-track {
+  display: flex;
+  gap: 20px;
+  transition: transform 0.5s ease;
+  cursor: grab;
+}
+
+.cards-track:active {
+  cursor: grabbing;
+}
+
+.use-card {
+  min-width: 300px;
+  height: 350px;
+  background: white;
+  color: black;
+  border-radius: 18px;
+  padding: 15px;
+  user-select: none;
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+}
+
+.icon-box {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f6f1a8;
+  border-radius: 12px;
+}
+
+.card-num {
+  font-size: 40px;
+  color: #ddd;
+  font-weight: bold;
+}
+
+.card-title {
+  font-weight: 700;
+  margin-top: 10px;
+  font-size:25px;
+  color: #d4317a;
+}
+
+.card-desc {
+  font-size: 18px;
+  margin-top: 8px;
+  line-height: 1.6;
+}

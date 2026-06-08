@@ -1,41 +1,3 @@
-// import dotenv from "dotenv";
-// dotenv.config();
-// import express from "express";
-// import cors from "cors";
-// import connectDB from "./config/db.js";
-// import authRoutes from "./routes/auth.routes.js";
-// import sosRoutes from "./routes/sos.routes.js";
-// import contactRoutes from "./routes/contact.routes.js";
-// import cookieParser from "cookie-parser";
-// import locationRoutes from "./routes/location.routes.js";
-// import profileRoutes from "./routes/profile.routes.js";
-
-// connectDB();
-
-// const app = express();
-
-// app.use(
-//   cors({
-//     origin: "http://localhost:3000", 
-//     credentials: true,              //  allow cookies
-//   })
-// );
-// app.use(cookieParser());
-// app.use(express.json());
-
-// app.use("/api/auth", authRoutes);
-// app.use("/api/sos", sosRoutes);
-// app.use("/api/contact", contactRoutes);     
-// app.use("/api/location", locationRoutes);
-// app.use("/api/profile", profileRoutes);
-// app.get("/", (req, res) => {
-//   res.send("SafeHer backend running 🚀");
-// });
-
-// const PORT = process.env.PORT || 5000;
-// app.listen(PORT, () =>
-//   console.log(`Server running on port ${PORT}`)
-// );
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -53,12 +15,13 @@ import contactRoutes from "./routes/contact.routes.js";
 import locationRoutes from "./routes/location.routes.js";
 import profileRoutes from "./routes/profile.routes.js";
 
+/* ================= DB CONNECT ================= */
 connectDB();
 
+/* ================= APP INIT ================= */
 const app = express();
 
 /* ================= MIDDLEWARE ================= */
-
 app.use(
   cors({
     origin: "http://localhost:3000",
@@ -70,7 +33,6 @@ app.use(cookieParser());
 app.use(express.json());
 
 /* ================= ROUTES ================= */
-
 app.use("/api/auth", authRoutes);
 app.use("/api/sos", sosRoutes);
 app.use("/api/contact", contactRoutes);
@@ -81,12 +43,10 @@ app.get("/", (req, res) => {
   res.send("SafeHer backend running 🚀");
 });
 
-/* ================= SOCKET SETUP START ================= */
-
-// 1. Create HTTP server (IMPORTANT)
+/* ================= HTTP SERVER ================= */
 const server = http.createServer(app);
 
-// 2. Create Socket.IO server
+/* ================= SOCKET.IO SETUP ================= */
 const io = new Server(server, {
   cors: {
     origin: "http://localhost:3000",
@@ -94,27 +54,31 @@ const io = new Server(server, {
   },
 });
 
-// 3. Attach io to app (so controllers can use it)
+/* attach io to express (VERY IMPORTANT) */
 app.set("io", io);
 
 /* ================= SOCKET EVENTS ================= */
-
 io.on("connection", (socket) => {
   console.log("🔌 Socket connected:", socket.id);
 
-  // Join SOS room
+  // ✅ Join SOS room (FIXED naming consistency)
   socket.on("joinSOS", (sosId) => {
+    if (!sosId) return;
     socket.join(sosId);
     console.log(`📍 Joined SOS room: ${sosId}`);
   });
 
+  // optional debug event
+  socket.on("leaveSOS", (sosId) => {
+    socket.leave(sosId);
+    console.log(`🚪 Left SOS room: ${sosId}`);
+  });
   socket.on("disconnect", () => {
     console.log("❌ Socket disconnected:", socket.id);
   });
 });
 
 /* ================= START SERVER ================= */
-
 const PORT = process.env.PORT || 5001;
 
 server.listen(PORT, () => {

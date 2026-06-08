@@ -10,7 +10,7 @@ const TrackSOS = () => {
   useEffect(() => {
     const fetchSOS = async () => {
       try {
-        const res = await API.get(`/api/sos/${id}`);
+        const res = await API.get(`/api/sos/public/${id}`);
         setSos(res.data);
       } catch (err) {
         console.error("Failed to fetch SOS:", err);
@@ -19,51 +19,55 @@ const TrackSOS = () => {
 
     fetchSOS();
 
-    // Connect socket only when tracking page opens
-    if (!socket.connected) {
-      socket.connect();
-    }
+    // ✅ Connect first, THEN join room inside connect handler
+    socket.connect();
 
-    socket.on("connect", () => {
+    const handleConnect = () => {
       console.log("✅ CONNECTED:", socket.id);
-
       socket.emit("joinSOS", id);
-      console.log("📍 Joining room:", id);
-    });
-
-    socket.on("connect_error", (err) => {
-      console.log("❌ CONNECT ERROR:", err.message);
-    });
-    socket.onAny((event, data) => {
-      console.log("📡 EVENT RECEIVED:", event, data);
-    });
-    const handleLocationUpdate = (data) => {
-      console.log("📡 SOCKET UPDATE:", data);
-
-      setSos((prev) => ({
-        ...prev,
-        location: {
-          lat: data.lat,
-          lng: data.lng,
-        },
-      }));
     };
 
+    const handleLocationUpdate = (data) => {
+      console.log("📡 SOCKET UPDATE:", data);
+      setSos((prev) => {
+        if (!prev) return prev;
+        return { ...prev, location: { lat: data.lat, lng: data.lng } };
+      });
+    };
+
+    socket.on("connect", handleConnect);
+    socket.on("connect_error", (err) => console.log("❌ CONNECT ERROR:", err.message));
     socket.on("locationUpdated", handleLocationUpdate);
+    const handleResolved = (data) => {
+  console.log("✅ SOS RESOLVED", data);
+
+  setSos((prev) => {
+    if (!prev) return prev;
+
+    return {
+      ...prev,
+      status: "RESOLVED",
+    };
+  });
+};
+
+socket.on("sosResolved", handleResolved);
+
+    // If already connected when this runs, join immediately
+    if (socket.connected) {
+      socket.emit("joinSOS", id);
+    }
 
     return () => {
-      socket.off("locationUpdated", handleLocationUpdate);
-      socket.off("connect");
+      socket.off("connect", handleConnect);
       socket.off("connect_error");
-
-      // Disconnect when leaving tracking page
+      socket.off("locationUpdated", handleLocationUpdate);
+      socket.off("sosResolved", handleResolved);
       socket.disconnect();
     };
   }, [id]);
 
-  if (!sos) {
-    return <p className="text-center mt-10">Loading...</p>;
-  }
+  if (!sos) return <p className="text-center mt-10">Loading...</p>;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gray-100">
@@ -71,6 +75,7 @@ const TrackSOS = () => {
 
       {sos.location && (
         <iframe
+          key={`${sos.location.lat}-${sos.location.lng}`}  // ✅ forces re-render on location change
           title="Tracking Map"
           width="100%"
           height="400"

@@ -2,10 +2,10 @@ import SOS from "../models/Sos.js";
 import sendAlert from "../utils/sendAlert.js";
 
 // ==========================
-// CONFIG (REAL SYSTEM STYLE)
+// CONFIG
 // ==========================
-const LOCATION_THROTTLE_MS = 1000;//20000; // 20 sec
-const SOS_COOLDOWN_MS = 60 * 1000;   // optional: 1 min anti-spam
+const LOCATION_THROTTLE_MS = 1000;
+const SOS_COOLDOWN_MS = 60 * 1000;
 
 const lastLocationMap = new Map();
 const lastSOSMap = new Map();
@@ -15,14 +15,8 @@ const lastSOSMap = new Map();
 // ==========================
 export const triggerSOS = async (req, res) => {
   try {
-    // TEMPORARY RESET
-   /* await SOS.updateMany(
-      { status: "ACTIVE" },
-      { $set: { status: "RESOLVED" } }
-    );*/
-
     const { location, message } = req.body;
-     console.log(req.user.id);
+
     if (!req.user?._id) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -30,45 +24,48 @@ export const triggerSOS = async (req, res) => {
     if (!location?.lat || !location?.lng) {
       return res.status(400).json({ message: "Location required" });
     }
+
+    const userId = req.user._id;
     const now = Date.now();
 
     // ==========================
-    // 🔥 COOLDOWN CHECK (ANTI SPAM)
-    const userId = req.user._id; // ✅ FIX HERE
-
-    console.log("USER:", userId);
+    // COOLDOWN CHECK
     // ==========================
     const lastSOS = lastSOSMap.get(userId.toString()) || 0;
 
     if (now - lastSOS < SOS_COOLDOWN_MS) {
       return res.status(429).json({
-        message: "⚠️ SOS cooldown active. Please wait before retrying.",
+        message: "⚠️ SOS cooldown active. Please wait.",
       });
     }
 
     // ==========================
-    // 🔥 CHECK ACTIVE SOS
+    // CHECK EXISTING ACTIVE SOS
     // ==========================
     let sos = await SOS.findOne({
       userId,
       status: "ACTIVE",
     });
 
-    // ==========================
-    // CASE 1: ACTIVE SOS EXISTS
-    // ==========================
     if (sos) {
-     console.log("sos exists");
+      const io = req.app.get("io");
+
+      // notify existing SOS reuse
+      io.to(sos._id.toString()).emit("sos-active", {
+        sosId: sos._id,
+        location: sos.location,
+        message: "SOS already active",
+      });
+
       return res.status(200).json({
-        message: "🚨 SOS already ACTIVE (using existing session)",
+        message: "🚨 SOS already ACTIVE",
         sosId: sos._id,
         status: "ACTIVE",
       });
-
     }
-   
+
     // ==========================
-    // CASE 2: CREATE NEW SOS
+    // CREATE NEW SOS
     // ==========================
     sos = await SOS.create({
       userId,
@@ -77,13 +74,24 @@ export const triggerSOS = async (req, res) => {
       status: "ACTIVE",
       locationHistory: [location],
     });
-    //console.log("sos created");
+
     lastSOSMap.set(userId.toString(), now);
 
     // ==========================
-    // SAFE ALERT (NON BLOCKING)
+    // SOCKET EMIT: SOS CREATED
     // ==========================
-    sendAlert(req.user, location.lat, location.lng,sos._id).catch((err) => {
+    const io = req.app.get("io");
+
+    io.to(sos._id.toString()).emit("sos-created", {
+      sosId: sos._id,
+      location: sos.location,
+      message: "🚨 SOS CREATED",
+    });
+
+    // ==========================
+    // EMAIL ALERT (NON BLOCKING)
+    // ==========================
+    sendAlert(req.user, location.lat, location.lng, sos._id,io).catch((err) => {
       console.log("Alert error:", err.message);
     });
 
@@ -102,10 +110,9 @@ export const triggerSOS = async (req, res) => {
 };
 
 // ==========================
-// UPDATE LOCATION (REAL-TIME TRACKING)
+// UPDATE LOCATION (REAL TIME)
 // ==========================
 export const updateLocation = async (req, res) => {
-  console.log("📍 UPDATE LOCATION HIT");
   try {
     const { sosId, lat, lng } = req.body;
 
@@ -116,10 +123,9 @@ export const updateLocation = async (req, res) => {
     const now = Date.now();
     const last = lastLocationMap.get(sosId) || 0;
 
-    // throttle
     if (now - last < LOCATION_THROTTLE_MS) {
       return res.status(200).json({
-        message: "⏳ Location update throttled",
+        message: "⏳ Throttled",
       });
     }
 
@@ -137,11 +143,6 @@ export const updateLocation = async (req, res) => {
 
     // update DB
     sos.location = { lat, lng };
-
-    if (!Array.isArray(sos.locationHistory)) {
-      sos.locationHistory = [];
-    }
-
     sos.locationHistory.push({ lat, lng });
 
     await sos.save();
@@ -149,10 +150,14 @@ export const updateLocation = async (req, res) => {
     lastLocationMap.set(sosId, now);
 
     // ==========================
-    // 🔥 SOCKET REAL-TIME EMIT (NEW PART)
+    // SOCKET EMIT: LIVE LOCATION
     // ==========================
     const io = req.app.get("io");
-    console.log("EMITTING TO ROOM:", sosId);
+    // console.log("🔥 EMITTING LOCATION", {
+    // sosId,
+    // lat,
+    // lng,
+    // });
 
     io.to(sosId).emit("locationUpdated", {
       sosId,
@@ -162,17 +167,18 @@ export const updateLocation = async (req, res) => {
     });
 
     return res.json({
-      message: "📍 Location updated + emitted",
-      sosId: sos._id,
+      message: "📍 Location updated",
+      sosId,
     });
 
   } catch (err) {
-    console.error("Location update error:", err);
+    console.error(err);
     return res.status(500).json({
-      message: "Failed to update location",
+      message: "Server error",
     });
   }
 };
+
 // ==========================
 // RESOLVE SOS
 // ==========================
@@ -190,8 +196,16 @@ export const resolveSOS = async (req, res) => {
     sos.status = "RESOLVED";
     await sos.save();
 
+    // ✅ Notify all tracking clients
+    const io = req.app.get("io");
+    console.log("🚨 EMITTING SOS RESOLVED", sos._id);
+    io.to(sos._id.toString()).emit("sosResolved", {
+      sosId: sos._id,
+      status: "RESOLVED",
+    });
+
     return res.json({
-      message: "✅ SOS resolved successfully",
+      message: "✅ SOS resolved",
     });
 
   } catch (err) {
@@ -202,7 +216,7 @@ export const resolveSOS = async (req, res) => {
 };
 
 // ==========================
-// GET USER SOS HISTORY
+// GET MY SOS
 // ==========================
 export const getMySOS = async (req, res) => {
   try {
@@ -211,6 +225,7 @@ export const getMySOS = async (req, res) => {
     }).sort({ createdAt: -1 });
 
     res.json(sosList);
+
   } catch (err) {
     res.status(500).json({
       message: "Failed to fetch SOS",
@@ -230,7 +245,10 @@ export const getSOSById = async (req, res) => {
     }
 
     res.json(sos);
+
   } catch (err) {
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({
+      message: "Server error",
+    });
   }
 };
