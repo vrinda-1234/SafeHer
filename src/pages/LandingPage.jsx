@@ -1,11 +1,7 @@
 import React, { useEffect } from "react";
 import logo from "../assests/logo.png";
 import { Link } from "react-router-dom";
-<<<<<<< HEAD
-import L from "../assests/L.jpg"
-=======
 import L from "../assests/L.jpg";
->>>>>>> 44e974b (feat: add fake call functionality and minor route deviation detection updates)
 import SafeHerSection from "../components/HowtouseSection/Howtousesection";
 function LandingPage() {
   // Smooth scroll for internal links
@@ -245,20 +241,11 @@ function LandingPage() {
       </section>
 
       {/* HOW IT WORKS */}
-<<<<<<< HEAD
-<section id="how-it-works" className=" min-h-[500px] w-full">
-  <div className="w-full h-full">
-    <SafeHerSection />
-  </div>
-</section>
-=======
-
       <section id="how-it-works" className=" min-h-[500px] w-full">
         <div className="w-full h-full">
           <SafeHerSection />
         </div>
       </section>
->>>>>>> 44e974b (feat: add fake call functionality and minor route deviation detection updates)
 
       {/* TRUST */}
       <section id="trust" className="bg-white py-20 px-4 text-center">

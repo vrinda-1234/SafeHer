@@ -19,7 +19,7 @@ const SoundDetector = () => {
 
   const activeRef = useRef(false);
   const isRestartingRef = useRef(false);
-  
+
   const loudHistoryRef = useRef([]);
   const dangerStreakRef = useRef(0);
   const lastTriggerTimeRef = useRef(0);
@@ -53,10 +53,6 @@ const SoundDetector = () => {
         sosActiveRef.current = true;
         socket.emit("joinSOS", active._id);
 
-<<<<<<< HEAD
-        
-=======
->>>>>>> 44e974b (feat: add fake call functionality and minor route deviation detection updates)
         setLastStatus("🚨 Restored ACTIVE SOS");
       } catch (err) {
         console.error(err);
@@ -73,87 +69,39 @@ const SoundDetector = () => {
   // ==========================
   // LOCATION
   // ==========================
-const startLiveLocation = () => {
-  if (watchIdRef.current !== null) {
-    return;
-  }
-
-  if (!navigator.geolocation) {
-    console.log("❌ Geolocation not supported");
-    return;
-  }
-
-  watchIdRef.current = navigator.geolocation.watchPosition(
-    (pos) => {
-      locationRef.current = {
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude,
-      };
-
-      // console.log(
-      //   "📍 LOCATION:",
-      //   pos.coords.latitude,
-      //   pos.coords.longitude
-      // );
-    },
-    (err) => {
-      console.log(err);
-    },
-    {
-      enableHighAccuracy: true,
-      maximumAge: 1000,
-      timeout: 10000,
+  const startLiveLocation = () => {
+    if (watchIdRef.current !== null) {
+      return;
     }
-  );
-};
 
-const stopLiveLocation = () => {
-  if (watchIdRef.current !== null) {
-    navigator.geolocation.clearWatch(watchIdRef.current);
-    watchIdRef.current = null;
-  }
-};
+    if (!navigator.geolocation) {
+      console.log("❌ Geolocation not supported");
+      return;
+    }
 
-  // ==========================
-  // SOCKET LOCATION SEND
-  // ==========================
-  const updateLocationAPI = async (sosId) => {
-  if (!sosId) return;
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      (pos) => {
+        locationRef.current = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        };
 
-  if (!locationRef.current) {
-    console.log("⏳ Waiting for GPS...");
-    return;
-  }
-
-  try {
-    // console.log("📤 Sending:", {
-    //   sosId,
-    //   lat: locationRef.current.lat,
-    //   lng: locationRef.current.lng,
-    // });
-
-    const res = await fetch(
-      "http://localhost:5001/api/sos/update-location",
+        // console.log(
+        //   "📍 LOCATION:",
+        //   pos.coords.latitude,
+        //   pos.coords.longitude
+        // );
+      },
+      (err) => {
+        console.log(err);
+      },
       {
-        method: "PATCH",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          sosId,
-          lat: locationRef.current.lat,
-          lng: locationRef.current.lng,
-        }),
+        enableHighAccuracy: true,
+        maximumAge: 1000,
+        timeout: 10000,
       }
     );
-
-    const data = await res.json();
-    // console.log("✅ Location Updated:", data);
-  } catch (err) {
-    console.error("❌ Location update failed:", err);
-  }
-};
+  };
 
   const stopLiveLocation = () => {
     if (watchIdRef.current !== null) {
@@ -216,17 +164,10 @@ const stopLiveLocation = () => {
   // TRIGGER SOS
   // ==========================
   const triggerAISOS = async () => {
-<<<<<<< HEAD
-      if (!locationRef.current) {
-    setLastStatus("⏳ Waiting for GPS...");
-    return;
-  }
-=======
     if (!locationRef.current) {
       setLastStatus("⏳ Waiting for GPS...");
       return;
     }
->>>>>>> 44e974b (feat: add fake call functionality and minor route deviation detection updates)
     const existing = await checkActiveSOS();
 
     if (existing) {
@@ -343,11 +284,7 @@ const stopLiveLocation = () => {
         dangerStreakRef.current = 0;
         await triggerAISOS();
       } else {
-<<<<<<< HEAD
-            setLastStatus(data.danger ? "⚠️ Suspicious sound" : "🟢 Normal");
-=======
         setLastStatus(data.danger ? "⚠️ Suspicious sound" : "🟢 Normal");
->>>>>>> 44e974b (feat: add fake call functionality and minor route deviation detection updates)
       }
 
       if (sosActiveRef.current && activeSosIdRef.current) {
@@ -365,51 +302,6 @@ const stopLiveLocation = () => {
   // ==========================
   // STOP
   // ==========================
-<<<<<<< HEAD
-const stopMonitoring = async () => {
-  activeRef.current = false;
-  setRecording(false);
-
-  stopLiveLocation();
-
-  if (intervalRef.current) {
-    clearInterval(intervalRef.current);
-    intervalRef.current = null;
-  }
-
-  try {
-    if (activeSosIdRef.current) {
-      await fetch(
-        `http://localhost:5001/api/sos/${activeSosIdRef.current}/resolve`,
-        {
-          method: "PUT",
-          credentials: "include",
-        }
-      );
-
-      console.log("✅ SOS Resolved");
-    }
-  } catch (err) {
-    console.error("❌ Resolve failed:", err);
-  }
-
-  // leave room
-  if (activeSosIdRef.current) {
-    socket.emit("leaveSOS", activeSosIdRef.current);
-  }
-
-  socket.disconnect();
-
-  sosActiveRef.current = false;
-  activeSosIdRef.current = null;
-
-  if (streamRef.current) {
-    streamRef.current.getTracks().forEach((t) => t.stop());
-  }
-
-  setLastStatus("Stopped");
-};
-=======
   const stopMonitoring = async () => {
     activeRef.current = false;
     setRecording(false);
@@ -453,7 +345,6 @@ const stopMonitoring = async () => {
 
     setLastStatus("Stopped");
   };
->>>>>>> 44e974b (feat: add fake call functionality and minor route deviation detection updates)
   return (
     <div style={styles.page}>
       <div style={styles.card}>
@@ -524,10 +415,6 @@ const stopMonitoring = async () => {
   );
 };
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 44e974b (feat: add fake call functionality and minor route deviation detection updates)
 const styles = {
   page: {
     minHeight: "100vh",
