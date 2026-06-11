@@ -1,7 +1,11 @@
 import React, { useEffect } from "react";
 import logo from "../assests/logo.png";
 import { Link } from "react-router-dom";
+<<<<<<< HEAD
 import L from "../assests/L.jpg"
+=======
+import L from "../assests/L.jpg";
+>>>>>>> 44e974b (feat: add fake call functionality and minor route deviation detection updates)
 import SafeHerSection from "../components/HowtouseSection/Howtousesection";
 function LandingPage() {
   // Smooth scroll for internal links
@@ -82,53 +86,50 @@ function LandingPage() {
       </header>
 
       {/* HERO / HOME */}
-<section
-  id="home"
-  className="relative min-h-screen bg-white text-black overflow-hidden"
->
-  {/* Background Overlay */}
-  <div className="absolute inset-0 bg-black/40 z-0"></div>
+      <section
+        id="home"
+        className="relative min-h-screen bg-white text-black overflow-hidden"
+      >
+        {/* Background Overlay */}
+        <div className="absolute inset-0 bg-black/40 z-0"></div>
 
-  <div className="relative z-10 max-w-7xl mx-auto px-6 pt-32 pb-16 h-screen flex items-center">
-    
-    {/* LEFT CONTENT */}
-    <div className="w-full lg:w-1/2">
-      <h1 className="text-5xl md:text-6xl font-bold leading-tight mb-6">
-        Your Safety,
-      <br />
-      <span className="text-blue-900 text-7xl">Our Priority</span>
-      </h1>
+        <div className="relative z-10 max-w-7xl mx-auto px-6 pt-32 pb-16 h-screen flex items-center">
+          {/* LEFT CONTENT */}
+          <div className="w-full lg:w-1/2">
+            <h1 className="text-5xl md:text-6xl font-bold leading-tight mb-6">
+              Your Safety,
+              <br />
+              <span className="text-blue-900 text-7xl">Our Priority</span>
+            </h1>
 
-      <p className="text-lg text-gray-600 max-w-lg mb-10">
-        SafeHer uses AI and real-time monitoring to detect distress and alert
-        help before danger escalates.
-      </p>
+            <p className="text-lg text-gray-600 max-w-lg mb-10">
+              SafeHer uses AI and real-time monitoring to detect distress and
+              alert help before danger escalates.
+            </p>
 
-      <div className="flex flex-wrap gap-4">
-
-      <Link to="/login">
-          <button
-          className="bg-white text-black px-6 py-3 rounded-lg font-semibold
+            <div className="flex flex-wrap gap-4">
+              <Link to="/login">
+                <button
+                  className="bg-white text-black px-6 py-3 rounded-lg font-semibold
           hover:scale-105 transition border-2  border-blue-900  hover:border-pink-500 hover:animate-pulse
-          ">
-          Get Started
-        </button>
+          "
+                >
+                  Get Started
+                </button>
+              </Link>
+            </div>
+          </div>
 
-      </Link>
-
-      </div>
-    </div>
-
-    {/* RIGHT IMAGE */}
-    <div className="hidden lg:flex w-1/2 justify-end">
-      <img
-        src={L}
-        alt="SafeHer"
-        className="h-[85vh] object-cover rounded-2xl shadow-2xl"
-      />
-    </div>
-  </div>
-</section>
+          {/* RIGHT IMAGE */}
+          <div className="hidden lg:flex w-1/2 justify-end">
+            <img
+              src={L}
+              alt="SafeHer"
+              className="h-[85vh] object-cover rounded-2xl shadow-2xl"
+            />
+          </div>
+        </div>
+      </section>
       {/* PROBLEM */}
       <section className="relative py-24 px-6 bg-purple-50">
         {/* Decorative blurred shapes */}
@@ -244,11 +245,20 @@ function LandingPage() {
       </section>
 
       {/* HOW IT WORKS */}
+<<<<<<< HEAD
 <section id="how-it-works" className=" min-h-[500px] w-full">
   <div className="w-full h-full">
     <SafeHerSection />
   </div>
 </section>
+=======
+
+      <section id="how-it-works" className=" min-h-[500px] w-full">
+        <div className="w-full h-full">
+          <SafeHerSection />
+        </div>
+      </section>
+>>>>>>> 44e974b (feat: add fake call functionality and minor route deviation detection updates)
 
       {/* TRUST */}
       <section id="trust" className="bg-white py-20 px-4 text-center">

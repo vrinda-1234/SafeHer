@@ -1,12 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-  Moon,
-  Heart,
-  Car,
-  Train,
-  Activity,
-  UserPlus,
-} from "lucide-react";
+import { Moon, Heart, Car, Train, Activity, UserPlus } from "lucide-react";
 import "./SafeHerSection.css";
 
 const headings = [
@@ -84,21 +77,20 @@ export default function SafeHerSection() {
 
         <div className="underline-bar" />
         <div className="flex position absolute left-5 bottom-20 gap-6">
-          <button onClick={() => goTo(current - 1)}
-             className="w-10 h-10 rounded-full bg-gray-300 text-white flex items-center justify-center text-2xl hover:bg-pink-600 transition"
+          <button
+            onClick={() => goTo(current - 1)}
+            className="w-10 h-10 rounded-full bg-gray-300 text-white flex items-center justify-center text-2xl hover:bg-pink-600 transition"
           >
-          ←
+            ←
           </button>
 
-<button
-  onClick={() => goTo(current + 1)}
-  className="w-10 h-10 rounded-full bg-gray-300 text-white flex items-center justify-center text-2xl hover:bg-pink-600 transition"
->
-  →
-</button>
+          <button
+            onClick={() => goTo(current + 1)}
+            className="w-10 h-10 rounded-full bg-gray-300 text-white flex items-center justify-center text-2xl hover:bg-pink-600 transition"
+          >
+            →
+          </button>
         </div>
-
-        
 
         <div className="nav-dots">
           {cardsData.map((_, i) => (
@@ -122,7 +114,9 @@ export default function SafeHerSection() {
           {cardsData.map((card, i) => (
             <div
               key={i}
-              className={`use-card ${i >= current && i <= current + 2 ? "visible" : ""}`}
+              className={`use-card ${
+                i >= current && i <= current + 2 ? "visible" : ""
+              }`}
             >
               <div className="card-top">
                 <div className="icon-box">{card.icon}</div>

@@ -53,7 +53,10 @@ const SoundDetector = () => {
         sosActiveRef.current = true;
         socket.emit("joinSOS", active._id);
 
+<<<<<<< HEAD
         
+=======
+>>>>>>> 44e974b (feat: add fake call functionality and minor route deviation detection updates)
         setLastStatus("🚨 Restored ACTIVE SOS");
       } catch (err) {
         console.error(err);
@@ -152,6 +155,51 @@ const stopLiveLocation = () => {
   }
 };
 
+  const stopLiveLocation = () => {
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+  };
+
+  // ==========================
+  // SOCKET LOCATION SEND
+  // ==========================
+  const updateLocationAPI = async (sosId) => {
+    if (!sosId) return;
+
+    if (!locationRef.current) {
+      console.log("⏳ Waiting for GPS...");
+      return;
+    }
+
+    try {
+      // console.log("📤 Sending:", {
+      //   sosId,
+      //   lat: locationRef.current.lat,
+      //   lng: locationRef.current.lng,
+      // });
+
+      const res = await fetch("http://localhost:5001/api/sos/update-location", {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sosId,
+          lat: locationRef.current.lat,
+          lng: locationRef.current.lng,
+        }),
+      });
+
+      const data = await res.json();
+      // console.log("✅ Location Updated:", data);
+    } catch (err) {
+      console.error("❌ Location update failed:", err);
+    }
+  };
+
   // ==========================
   // SOS CHECK
   // ==========================
@@ -168,10 +216,17 @@ const stopLiveLocation = () => {
   // TRIGGER SOS
   // ==========================
   const triggerAISOS = async () => {
+<<<<<<< HEAD
       if (!locationRef.current) {
     setLastStatus("⏳ Waiting for GPS...");
     return;
   }
+=======
+    if (!locationRef.current) {
+      setLastStatus("⏳ Waiting for GPS...");
+      return;
+    }
+>>>>>>> 44e974b (feat: add fake call functionality and minor route deviation detection updates)
     const existing = await checkActiveSOS();
 
     if (existing) {
@@ -288,7 +343,11 @@ const stopLiveLocation = () => {
         dangerStreakRef.current = 0;
         await triggerAISOS();
       } else {
+<<<<<<< HEAD
             setLastStatus(data.danger ? "⚠️ Suspicious sound" : "🟢 Normal");
+=======
+        setLastStatus(data.danger ? "⚠️ Suspicious sound" : "🟢 Normal");
+>>>>>>> 44e974b (feat: add fake call functionality and minor route deviation detection updates)
       }
 
       if (sosActiveRef.current && activeSosIdRef.current) {
@@ -306,6 +365,7 @@ const stopLiveLocation = () => {
   // ==========================
   // STOP
   // ==========================
+<<<<<<< HEAD
 const stopMonitoring = async () => {
   activeRef.current = false;
   setRecording(false);
@@ -349,103 +409,138 @@ const stopMonitoring = async () => {
 
   setLastStatus("Stopped");
 };
+=======
+  const stopMonitoring = async () => {
+    activeRef.current = false;
+    setRecording(false);
+
+    stopLiveLocation();
+
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    try {
+      if (activeSosIdRef.current) {
+        await fetch(
+          `http://localhost:5001/api/sos/${activeSosIdRef.current}/resolve`,
+          {
+            method: "PUT",
+            credentials: "include",
+          }
+        );
+
+        console.log("✅ SOS Resolved");
+      }
+    } catch (err) {
+      console.error("❌ Resolve failed:", err);
+    }
+
+    // leave room
+    if (activeSosIdRef.current) {
+      socket.emit("leaveSOS", activeSosIdRef.current);
+    }
+
+    socket.disconnect();
+
+    sosActiveRef.current = false;
+    activeSosIdRef.current = null;
+
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+    }
+
+    setLastStatus("Stopped");
+  };
+>>>>>>> 44e974b (feat: add fake call functionality and minor route deviation detection updates)
   return (
-  <div style={styles.page}>
-    <div style={styles.card}>
+    <div style={styles.page}>
+      <div style={styles.card}>
+        <div
+          style={
+            recording ? styles.statusCardActive : styles.statusCardInactive
+          }
+        >
+          <div style={styles.statusDot}></div>
 
-      <div
-        style={
-          recording
-            ? styles.statusCardActive
-            : styles.statusCardInactive
-        }
-      >
-        <div style={styles.statusDot}></div>
+          <div>
+            <h3 style={styles.statusTitle}>
+              {recording ? "LIVE MONITORING ACTIVE" : "MONITORING STOPPED"}
+            </h3>
 
-        <div>
-          <h3 style={styles.statusTitle}>
-            {recording
-              ? "LIVE MONITORING ACTIVE"
-              : "MONITORING STOPPED"}
-          </h3>
-
-          <p style={styles.statusText}>
-            {recording
-              ? "AI is listening for potential danger signals."
-              : "Start monitoring to activate AI protection."}
-          </p>
-        </div>
-      </div>
-
-      <div style={styles.buttonContainer}>
-        {!recording ? (
-          <button
-            style={styles.startBtn}
-            onClick={startMonitoring}
-          >
-             Start Monitoring
-          </button>
-        ) : (
-          <button
-            style={styles.stopBtn}
-            onClick={stopMonitoring}
-          >
-            ⛔ Stop Monitoring
-          </button>
-        )}
-      </div>
-
-      <div style={styles.statsGrid}>
-        <div style={styles.statCard}>
-          <span style={styles.statLabel}>Current Status</span>
-          <span style={styles.statValue}>{lastStatus}</span>
+            <p style={styles.statusText}>
+              {recording
+                ? "AI is listening for potential danger signals."
+                : "Start monitoring to activate AI protection."}
+            </p>
+          </div>
         </div>
 
-        <div style={styles.statCard}>
-          <span style={styles.statLabel}>Danger Score</span>
-          <span style={styles.dangerValue}>{dangerCount}</span>
-        </div>
-      </div>
-
-      <div style={styles.console}>
-        <h3 style={styles.consoleTitle}>📊 Live Console</h3>
-
-        <div style={styles.consoleRow}>
-          <span>Status</span>
-          <strong>{lastStatus}</strong>
+        <div style={styles.buttonContainer}>
+          {!recording ? (
+            <button style={styles.startBtn} onClick={startMonitoring}>
+              Start Monitoring
+            </button>
+          ) : (
+            <button style={styles.stopBtn} onClick={stopMonitoring}>
+              ⛔ Stop Monitoring
+            </button>
+          )}
         </div>
 
-        <div style={styles.consoleRow}>
-          <span>Danger Score</span>
-          <strong>{dangerCount}</strong>
+        <div style={styles.statsGrid}>
+          <div style={styles.statCard}>
+            <span style={styles.statLabel}>Current Status</span>
+            <span style={styles.statValue}>{lastStatus}</span>
+          </div>
+
+          <div style={styles.statCard}>
+            <span style={styles.statLabel}>Danger Score</span>
+            <span style={styles.dangerValue}>{dangerCount}</span>
+          </div>
         </div>
 
-        <div style={styles.consoleRow}>
-          <span>Monitoring</span>
-          <strong>
-            {recording ? "🟢 Active" : "🔴 Inactive"}
-          </strong>
+        <div style={styles.console}>
+          <h3 style={styles.consoleTitle}>📊 Live Console</h3>
+
+          <div style={styles.consoleRow}>
+            <span>Status</span>
+            <strong>{lastStatus}</strong>
+          </div>
+
+          <div style={styles.consoleRow}>
+            <span>Danger Score</span>
+            <strong>{dangerCount}</strong>
+          </div>
+
+          <div style={styles.consoleRow}>
+            <span>Monitoring</span>
+            <strong>{recording ? "🟢 Active" : "🔴 Inactive"}</strong>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
 };
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 44e974b (feat: add fake call functionality and minor route deviation detection updates)
 const styles = {
-page: {
-  minHeight: "100vh",
-  padding: "30px",
-},
+  page: {
+    minHeight: "100vh",
+    padding: "30px",
+  },
 
-card: {
-  width: "100%",
-  // background: "#fff",
-  borderRadius: "24px",
-  padding: "32px",
-  // boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-},
+  card: {
+    width: "100%",
+    // background: "#fff",
+    borderRadius: "24px",
+    padding: "32px",
+    // boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+  },
 
   header: {
     textAlign: "center",

@@ -67,6 +67,10 @@ io.on("connection", (socket) => {
     socket.join(sosId);
     console.log(`📍 Joined SOS room: ${sosId}`);
   });
+  socket.on("leaveSOS", (sosId) => {
+    socket.leave(sosId);
+    console.log(`🚪 Left SOS room: ${sosId}`);
+  });
 
   // optional debug event
   socket.on("leaveSOS", (sosId) => {

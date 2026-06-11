@@ -16,7 +16,8 @@ import Profile from "./pages/Profile";
 import Contacts from "./pages/Contacts";
 import TrackSOS from "./pages/TrackSOS";
 import AIThreatDetection from "./pages/AIThreatDetection";
-
+import SafeRoute from "./pages/SafeRoute"
+import QuickExit from "./pages/QuickExit";
 import { AuthProvider } from "./context/AuthContext";
 
 export default function App() {
@@ -79,6 +80,22 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/saferoute"
+            element={
+              <ProtectedRoute>
+                <SafeRoute />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+  path="/quick-exit"
+  element={
+    <ProtectedRoute>
+      <QuickExit />
+    </ProtectedRoute>
+  }
+/>
         </Routes>
       </Router>
     </AuthProvider>

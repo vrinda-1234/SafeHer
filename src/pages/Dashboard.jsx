@@ -7,6 +7,8 @@ import EmergencySOS from "./EmergencySOS";
 import Contacts from "./Contacts";
 import AIThreatDetection from "./AIThreatDetection";
 import Settings from "./Settings";
+import SafeRoute from "./SafeRoute";
+import QuickExit from "./QuickExit";
 const Dashboard = () => {
   const [active, setActive] = useState("dashboard");
   // const navigate = useNavigate();
@@ -21,7 +23,8 @@ const Dashboard = () => {
         { name: "Location", key: "location", icon: "📍" },
         { name: "AI Monitoring", key: "ai", icon: "🤖" },
         { name: "Safety Score", key: "score", icon: "📊" },
-        { name: "Alerts", key: "alerts", icon: "📜" },
+        { name: "SafeRoute", key: "route", icon: "🛡️" },
+        { name: "QuickExit", key: "quick-exit", icon: "🏃" },
         { name: "Settings", key: "settings", icon: "⚙️" },
       ].map((item) => (
         <div
@@ -178,6 +181,10 @@ const Dashboard = () => {
         return <Settings />;
       case "profile":
         return <Profile />;
+      case "route":
+        return <SafeRoute />;
+      case "quick-exit":
+        return <QuickExit />;
       default:
         return <Home />;
     }

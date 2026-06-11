@@ -98,6 +98,7 @@ const EmergencySOS = () => {
         setLocation({ lat, lng });
 
         try {
+          console.log("📡 sending location update", { lat, lng, id });
           await API.patch(
             "/api/sos/update-location",
             {
@@ -197,7 +198,7 @@ const EmergencySOS = () => {
       const id = res.data.sosId;
 
       setSosId(id);
-      const trackingUrl = `${FRONTEND_URL}/track/${id}`;
+      const trackingUrl = `${FRONTEND_URL}/public/track/${id}`;
       setTrackingLink(trackingUrl);
       startTracking(id);
       setStep("sent");

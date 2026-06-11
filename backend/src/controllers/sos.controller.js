@@ -16,7 +16,6 @@ const lastSOSMap = new Map();
 export const triggerSOS = async (req, res) => {
   try {
     const { location, message } = req.body;
-
     if (!req.user?._id) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -48,7 +47,12 @@ export const triggerSOS = async (req, res) => {
     });
 
     if (sos) {
+<<<<<<< HEAD
       const io = req.app.get("io");
+=======
+     console.log("sos exists");
+     const io = req.app.get("io");
+>>>>>>> 44e974b (feat: add fake call functionality and minor route deviation detection updates)
 
       // notify existing SOS reuse
       io.to(sos._id.toString()).emit("sos-active", {
@@ -56,7 +60,10 @@ export const triggerSOS = async (req, res) => {
         location: sos.location,
         message: "SOS already active",
       });
+<<<<<<< HEAD
 
+=======
+>>>>>>> 44e974b (feat: add fake call functionality and minor route deviation detection updates)
       return res.status(200).json({
         message: "🚨 SOS already ACTIVE",
         sosId: sos._id,
@@ -87,11 +94,15 @@ export const triggerSOS = async (req, res) => {
       location: sos.location,
       message: "🚨 SOS CREATED",
     });
+<<<<<<< HEAD
 
     // ==========================
     // EMAIL ALERT (NON BLOCKING)
     // ==========================
     sendAlert(req.user, location.lat, location.lng, sos._id,io).catch((err) => {
+=======
+    sendAlert(req.user, location.lat, location.lng,sos._id).catch((err) => {
+>>>>>>> 44e974b (feat: add fake call functionality and minor route deviation detection updates)
       console.log("Alert error:", err.message);
     });
 
@@ -143,6 +154,10 @@ export const updateLocation = async (req, res) => {
 
     // update DB
     sos.location = { lat, lng };
+<<<<<<< HEAD
+=======
+
+>>>>>>> 44e974b (feat: add fake call functionality and minor route deviation detection updates)
     sos.locationHistory.push({ lat, lng });
 
     await sos.save();
@@ -150,7 +165,11 @@ export const updateLocation = async (req, res) => {
     lastLocationMap.set(sosId, now);
 
     // ==========================
+<<<<<<< HEAD
     // SOCKET EMIT: LIVE LOCATION
+=======
+    // 🔥 SOCKET EMIT:LIVE LOCATION
+>>>>>>> 44e974b (feat: add fake call functionality and minor route deviation detection updates)
     // ==========================
     const io = req.app.get("io");
     // console.log("🔥 EMITTING LOCATION", {
@@ -174,7 +193,11 @@ export const updateLocation = async (req, res) => {
   } catch (err) {
     console.error(err);
     return res.status(500).json({
+<<<<<<< HEAD
       message: "Server error",
+=======
+      message: "Server error"
+>>>>>>> 44e974b (feat: add fake call functionality and minor route deviation detection updates)
     });
   }
 };
@@ -203,7 +226,6 @@ export const resolveSOS = async (req, res) => {
       sosId: sos._id,
       status: "RESOLVED",
     });
-
     return res.json({
       message: "✅ SOS resolved",
     });
