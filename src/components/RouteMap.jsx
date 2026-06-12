@@ -1,54 +1,89 @@
-import { MapContainer, TileLayer, Marker, Polyline } from "react-leaflet";
-import L from "leaflet";
-import { useEffect, useState } from "react";
+import {
+  MapContainer,
+  TileLayer,
+  Polyline,
+  Marker,
+  Popup,
+} from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 delete L.Icon.Default.prototype._getIconUrl;
 
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
-
-export default function RouteMap({ userLocation, routePoints, destination }) {
-  const [center, setCenter] = useState([28.6139, 77.209]);
-
-  useEffect(() => {
-    if (userLocation) {
-      setCenter([userLocation.lat, userLocation.lng]);
-    }
-  }, [userLocation]);
+export default function RouteMap({
+  routePoints,
+  currentLocation,
+  destination,
+}) {
+  if (!currentLocation) {
+    return (
+      <div className="bg-white rounded-3xl shadow-xl p-5 mb-5">
+        Waiting for GPS...
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-3xl shadow-xl overflow-hidden mb-5">
-      <div className="h-[420px]">
-        <MapContainer center={center} zoom={15} style={{ height: "100%" }}>
-          {/* MAP LAYER */}
-          <TileLayer
-            attribution="&copy; OpenStreetMap contributors"
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+
+      <MapContainer
+        center={[
+          currentLocation.lat,
+          currentLocation.lng,
+        ]}
+        zoom={14}
+        style={{
+          height: "300px",
+          width: "100%",
+        }}
+      >
+        <TileLayer
+          attribution="&copy; OpenStreetMap"
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+
+        {/* Planned Route */}
+        {routePoints?.length > 0 && (
+          <Polyline
+            positions={routePoints.map((p) => [
+              p.lat,
+              p.lng,
+            ])}
           />
+        )}
 
-          {/* USER MARKER */}
-          {userLocation && (
-            <Marker position={[userLocation.lat, userLocation.lng]} />
-          )}
+        {/* Current User */}
+        <Marker
+          position={[
+            currentLocation.lat,
+            currentLocation.lng,
+          ]}
+        >
+          <Popup>Your Location</Popup>
+        </Marker>
 
-          {/* DESTINATION */}
-          {destination && (
-            <Marker position={[destination.lat, destination.lng]} />
-          )}
+        {/* Destination */}
+        {destination && (
+          <Marker
+            position={[
+              destination.lat,
+              destination.lng,
+            ]}
+          >
+            <Popup>Destination</Popup>
+          </Marker>
+        )}
+      </MapContainer>
 
-          {/* ROUTE LINE */}
-          {routePoints?.length > 0 && (
-            <Polyline
-              positions={routePoints.map((p) => [p.lat, p.lng])}
-              color="blue"
-            />
-          )}
-        </MapContainer>
-      </div>
     </div>
   );
 }

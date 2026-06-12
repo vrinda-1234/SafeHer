@@ -2,3 +2,10 @@ body{
   margin:0;
   font-family:Arial,sans-serif;
 }
+.leaflet-container {
+  z-index: 0 !important;
+}
+
+.leaflet-pane {
+  z-index: 0 !important;
+}

@@ -22,10 +22,10 @@ const Dashboard = () => {
         { name: "Contacts", key: "contacts", icon: "👥" },
         { name: "Location", key: "location", icon: "📍" },
         { name: "AI Monitoring", key: "ai", icon: "🤖" },
-        { name: "Safety Score", key: "score", icon: "📊" },
-        { name: "SafeRoute", key: "route", icon: "🛡️" },
         { name: "QuickExit", key: "quick-exit", icon: "🏃" },
+        {name:"SafeRoute",key:"route",icon:"🛡️"},
         { name: "Settings", key: "settings", icon: "⚙️" },
+        
       ].map((item) => (
         <div
           key={item.key}
@@ -173,8 +173,8 @@ const Dashboard = () => {
         return <Location />;
       case "ai":
         return <AIThreatDetection />;
-      case "score":
-        return <Score />;
+      case "quick-exit":
+        return <QuickExit/>;
       case "alerts":
         return <Alerts />;
       case "settings":
@@ -182,9 +182,7 @@ const Dashboard = () => {
       case "profile":
         return <Profile />;
       case "route":
-        return <SafeRoute />;
-      case "quick-exit":
-        return <QuickExit />;
+        return <SafeRoute/>;
       default:
         return <Home />;
     }

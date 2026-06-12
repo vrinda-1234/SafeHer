@@ -1,17 +1,17 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Navigation, Play, Square } from "lucide-react";
-import { haversine } from "../utils/geo";
+import DeviationModal from "../components/DeviationModal";
+import { haversine } from "../utils/haversine";
 import {
   startTripAPI,
   endTripAPI,
   getActiveTripAPI,
   triggerSOSAPI,
+  updateSOSLocationAPI,
 } from "../services/tripService";
-
+import DestinationSearch from "../components/DestinationSearch";
 import RouteSummary from "../components/RouteSummary";
 import RouteMap from "../components/RouteMap";
-import AlertCard from "../components/AlertCard";
-import FloatingActions from "../components/FloatingActions";
 
 const SEND_INTERVAL = 3000;
 const DEVIATION_LIMIT = 500;
@@ -23,49 +23,80 @@ export default function SafeRoutePage() {
   const [status, setStatus] = useState("Idle");
   const [offRoute, setOffRoute] = useState(false);
   const [streak, setStreak] = useState(0);
-  const [userLocation, setUserLocation] = useState(null);
+  const [selectedDestination, setSelectedDestination] =
+  useState(null);
+
+  const [distanceLeft, setDistanceLeft] = useState(0);
+const [eta, setEta] = useState(0);
+  
+  const [showDeviationPopup, setShowDeviationPopup] = useState(false);
+const [countdown, setCountdown] = useState(60);
+
+const sosTrackingRef = useRef(null);
+const sosIdRef = useRef(null);
   const locationRef = useRef(null);
+  const [trip, setTrip] = useState(null);
+  const [currentLocation, setCurrentLocation] = useState(null);
   const watchIdRef = useRef(null);
   const intervalRef = useRef(null);
 
   const tripRef = useRef(null);
   const streakRef = useRef(0);
-
   // ---------------- GPS ----------------
   const startGPS = () => {
-    watchIdRef.current = navigator.geolocation.watchPosition((pos) => {
-      const loc = {
+  if (watchIdRef.current) return;
+
+  watchIdRef.current = navigator.geolocation.watchPosition(
+    (pos) => {
+      const location = {
         lat: pos.coords.latitude,
         lng: pos.coords.longitude,
       };
 
-      locationRef.current = loc;
-      setUserLocation(loc); // 👈 LIVE UI UPDATE
-    });
-  };
+      locationRef.current = location;
+      setCurrentLocation(location);
+    },
+    (err) => {
+      console.log("GPS Error:", err);
+    },
+    {
+      enableHighAccuracy: true,
+      maximumAge: 0,
+    }
+  );
+};
 
   const stopGPS = () => {
-    if (watchIdRef.current) {
-      navigator.geolocation.clearWatch(watchIdRef.current);
-    }
-  };
+  if (watchIdRef.current) {
+    navigator.geolocation.clearWatch(
+      watchIdRef.current
+    );
+
+    watchIdRef.current = null;
+  }
+};
 
   // ---------------- START ----------------
   const startTrip = async () => {
-    if (!destination) return alert("Enter destination");
+    if (!selectedDestination) {
+  return alert(
+    "Please select a destination from suggestions"
+  );
+}
     if (!locationRef.current) return alert("Waiting for GPS");
 
-    const data = await startTripAPI(locationRef.current, {
-      lat: 28.6139,
-      lng: 77.209,
-    });
+    const data = await startTripAPI(
+  locationRef.current,
+  selectedDestination
+);
 
     tripRef.current = data.trip;
+setTrip(data.trip);
+    
 
     setTracking(true);
     setStatus("Active");
 
-    startGPS();
     startMonitoring();
   };
 
@@ -79,12 +110,11 @@ export default function SafeRoutePage() {
 
     for (let p of route) {
       const d = haversine(
-        locationRef.current.lat,
-        locationRef.current.lng,
+        locationRef.current.lat+0.2,
+        locationRef.current.lng+0.2,
         p.lat,
         p.lng
       );
-
       minDist = Math.min(minDist, d);
     }
 
@@ -94,10 +124,12 @@ export default function SafeRoutePage() {
       setOffRoute(true);
       setStatus(`Off Route (${streakRef.current})`);
 
-      if (streakRef.current >= STREAK_LIMIT) {
-        await triggerSOSAPI(locationRef.current);
-        streakRef.current = 0;
-      }
+      if (
+  streakRef.current >= STREAK_LIMIT &&
+  !showDeviationPopup
+) {
+  setShowDeviationPopup(true);
+}
     } else {
       streakRef.current = 0;
       setStreak(0);
@@ -108,102 +140,249 @@ export default function SafeRoutePage() {
 
   // ---------------- MONITOR ----------------
   const startMonitoring = () => {
-    intervalRef.current = setInterval(checkDeviation, SEND_INTERVAL);
-  };
+  if (intervalRef.current) {
+    clearInterval(intervalRef.current);
+  }
+
+  intervalRef.current = setInterval(
+    checkDeviation,
+    SEND_INTERVAL
+  );
+};
+const sendSOSLocation = async () => {
+  if (!sosIdRef.current) return;
+  if (!locationRef.current) return;
+
+  try {
+    await updateSOSLocationAPI(
+      sosIdRef.current,
+      locationRef.current
+    );
+
+    console.log(
+      "📍 SOS location sent:",
+      locationRef.current
+    );
+  } catch (err) {
+    console.log(
+      "❌ Failed to update SOS location",
+      err
+    );
+  }
+};
 
   const stopMonitoring = () => {
+  if (intervalRef.current) {
     clearInterval(intervalRef.current);
-  };
+    intervalRef.current = null;
+  }
+};
 
   // ---------------- STOP ----------------
   const stopTrip = async () => {
     setTracking(false);
     setOffRoute(false);
     setStatus("Stopped");
+    setTrip(null);
+tripRef.current = null;
 
     stopGPS();
     stopMonitoring();
 
     await endTripAPI();
+    if (sosTrackingRef.current) {
+  clearInterval(sosTrackingRef.current);
+  sosTrackingRef.current = null;
+}
   };
+  const handleSafe = () => {
+  setShowDeviationPopup(false);
+
+  streakRef.current = 0;
+
+  setOffRoute(false);
+
+  setCountdown(60);
+};
+
+const handleSOS = async () => {
+  try {
+    const res = await triggerSOSAPI(locationRef.current);
+
+    sosIdRef.current = res.sosId;
+    console.log(
+  "🚨 SOS activated:",
+  sosIdRef.current
+);
+
+if (!sosTrackingRef.current) {
+  sosTrackingRef.current = setInterval(
+    sendSOSLocation,
+    3000
+  );
+}
+
+    setShowDeviationPopup(false);
+  } catch (err) {
+    console.log(err);
+  }
+};
 
   // ---------------- INIT ----------------
   useEffect(() => {
+  if (!currentLocation || !trip?.destination) return;
+
+  const d = haversine(
+    currentLocation.lat,
+    currentLocation.lng,
+    trip.destination.lat,
+    trip.destination.lng
+  );
+
+  setDistanceLeft(d);
+
+  // assume 40 km/h average speed
+  const speed = 40000 / 60;
+
+  setEta(Math.ceil(d / speed));
+}, [currentLocation, trip]);
+
+  useEffect(() => {
+  if (!showDeviationPopup) return;
+
+  let time = 60;
+
+  setCountdown(time);
+
+  const interval = setInterval(async () => {
+    time--;
+
+    setCountdown(time);
+
+    if (time <= 0) {
+  clearInterval(interval);
+
+  try {
+    const res = await triggerSOSAPI(
+      locationRef.current
+    );
+
+    sosIdRef.current = res.sosId;
+    if (!sosTrackingRef.current) {
+  sosTrackingRef.current = setInterval(
+    sendSOSLocation,
+    3000
+  );
+}
+  } catch (err) {
+    console.log(err);
+  }
+
+  setShowDeviationPopup(false);
+}
+  }, 1000);
+
+  return () => clearInterval(interval);
+}, [showDeviationPopup]);
+  useEffect(() => {
+    startGPS();
     getActiveTripAPI().then((data) => {
       if (data?.trip) {
-        tripRef.current = data.trip;
-        setTracking(true);
-        setStatus("Restored Trip");
-      }
+  tripRef.current = data.trip;
+  setTrip(data.trip);
+
+  setTracking(true);
+  setStatus("Restored Trip");
+
+  startMonitoring();
+}
     });
 
     return () => {
       stopGPS();
       stopMonitoring();
+      if (sosTrackingRef.current) {
+      clearInterval(sosTrackingRef.current);
+      sosTrackingRef.current = null;
+    }
     };
   }, []);
 
   // ---------------- UI ----------------
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-violet-50 via-white to-purple-50 p-4">
-      {/* HEADER */}
-      <div className="bg-white rounded-3xl shadow-lg p-5 mb-5">
-        <h2 className="text-xl font-bold flex items-center gap-2">
-          🛡 Safe Route
-        </h2>
+ return (
+  <div className="min-h-screen bg-gradient-to-b from-violet-50 via-white to-purple-50 p-4">
+    {/* INPUT SECTION */}
+    <div className="bg-white rounded-3xl shadow-lg p-5 mb-5">
 
-        <p className="text-gray-600 text-sm mt-1">
-          AI-powered route safety monitoring
+      <div className="mb-4">
+  <DestinationSearch
+    destination={destination}
+    setDestination={setDestination}
+    setSelectedDestination={setSelectedDestination}
+  />
+</div>
+
+      {/* DEBUG INFO */}
+      <div className="mb-4 text-sm">
+        <p>
+          Tracking:
+          <span className="font-bold ml-2">
+            {tracking ? "TRUE" : "FALSE"}
+          </span>
+        </p>
+
+        <p>
+          Status:
+          <span className="font-bold ml-2">
+            {status}
+          </span>
         </p>
       </div>
 
-      {/* INPUT */}
-      <div className="bg-white rounded-3xl shadow-lg p-5 mb-5">
-        <div className="relative mb-4">
-          <Navigation className="absolute left-3 top-3 text-violet-500" />
-          <input
-            value={destination}
-            onChange={(e) => setDestination(e.target.value)}
-            className="w-full border rounded-xl pl-10 p-3"
-            placeholder="Enter destination"
-          />
-        </div>
-
-        {!tracking ? (
-          <button
-            onClick={startTrip}
-            className="w-full bg-violet-600 text-white py-3 rounded-xl flex items-center justify-center gap-2"
-          >
-            <Play /> Start Trip
-          </button>
-        ) : (
-          <button
-            onClick={stopTrip}
-            className="w-full bg-red-500 text-white py-3 rounded-xl flex items-center justify-center gap-2"
-          >
-            <Square /> Stop Trip
-          </button>
-        )}
-      </div>
-
-      {/* STATUS */}
-      <RouteSummary tracking={tracking} />
-
-      {/* MAP */}
-      <RouteMap
-        userLocation={userLocation}
-        routePoints={tripRef.current?.routePoints}
-        destination={tripRef.current?.destination}
-      />
-
-      {/* ALERT */}
-      <AlertCard
-        show={offRoute}
-        onSOS={() => triggerSOSAPI(locationRef.current)}
-      />
-
-      {/* FLOATING */}
-      <FloatingActions />
+      {/* BUTTON */}
+      {!tracking ? (
+        <button
+          onClick={startTrip}
+          className="w-full bg-violet-600 text-black border-black py-3 rounded-xl flex items-center justify-center gap-2"
+        >
+          <Play size={18} />
+          Start Trip
+        </button>
+      ) : (
+        <button
+          onClick={stopTrip}
+          className="w-full bg-red-500 text-white py-3 rounded-xl flex items-center justify-center gap-2"
+        >
+          <Square size={18} />
+          Stop Trip
+        </button>
+      )}
     </div>
-  );
+
+    {/* SUMMARY */}
+    <RouteSummary
+  tracking={tracking}
+  distance={distanceLeft}
+  eta={eta}
+/>      
+    <br></br>
+    {/* MAP */}
+    <RouteMap
+      routePoints={trip?.routePoints || []}
+      currentLocation={currentLocation}
+      destination={trip?.destination}
+    />
+
+    {/* ALERT */}
+
+
+    {/* DEVIATION POPUP */}
+    <DeviationModal
+      show={showDeviationPopup}
+      countdown={countdown}
+      onSafe={handleSafe}
+      onSOS={handleSOS}
+    />
+  </div>
+);
 }
