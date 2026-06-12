@@ -110,8 +110,8 @@ setTrip(data.trip);
 
     for (let p of route) {
       const d = haversine(
-        locationRef.current.lat+0.2,
-        locationRef.current.lng+0.2,
+        locationRef.current.lat,
+        locationRef.current.lng,
         p.lat,
         p.lng
       );
