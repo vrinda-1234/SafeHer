@@ -73,7 +73,7 @@ const TrackSOS = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gray-100">
-      <h1 className="text-2xl font-bold text-red-600 mb-4">🚨 Live Tracking</h1>
+      <h1 className="text-2xl font-bold text-red-600 font-syne mb-4">🚨 Live Tracking</h1>
 
       {sos.location && (
         <iframe
@@ -86,7 +86,7 @@ const TrackSOS = () => {
         />
       )}
 
-      <p className="mt-4 text-gray-700">
+      <p className="mt-4 font-inter text-gray-700">
         Status: <b>{sos.status}</b>
       </p>
     </div>

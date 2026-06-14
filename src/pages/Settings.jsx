@@ -36,6 +36,10 @@ const Settings = () => {
 //     }));
 //   };
 
+  const handleDarkModeClick = () => {
+  alert("🌙 Dark Mode will be available in a future update!");
+};
+
   const toggleNotifications = async () => {
     if (!settings.notifications) {
       const permission = await Notification.requestPermission();
@@ -88,13 +92,13 @@ const Settings = () => {
     <div className="max-w-5xl mx-auto p-6 space-y-8">
       {/* STATUS CARD */}
       <div className="bg-gradient-to-r from-blue-900 to-pink-500 text-white rounded-2xl p-6 shadow-lg">
-        <h2 className="text-xl font-bold mb-4">
+        <h2 className="text-xl font-syne  font-bold mb-4">
           🛡 SafeHer Protection Status
         </h2>
 
         <div className="grid md:grid-cols-3 gap-4">
           <div>
-            <p className="text-sm opacity-90">
+            <p className="text-sm font-syne opacity-90">
               Notifications
             </p>
 
@@ -106,23 +110,21 @@ const Settings = () => {
           </div>
 
           <div>
-            <p className="text-sm opacity-90">
+            <p className="text-sm font-syne opacity-90">
               Appearance
             </p>
 
-            <p className="font-semibold">
-              {settings.darkMode
-                ? "Dark Mode"
-                : "Light Mode"}
-            </p>
+             <p className="font-semibold">
+    Light Mode
+  </p>
           </div>
 
           <div>
-            <p className="text-sm opacity-90">
+            <p className="text-sm font-syne opacity-90">
               Encryption
             </p>
 
-            <p className="font-semibold">
+            <p className="font-semibold font-inter">
               Active
             </p>
           </div>
@@ -175,8 +177,8 @@ const Settings = () => {
         <SettingRow
           title="Dark Mode"
           description="Switch between light and dark themes."
-          value={settings.darkMode}
-        //   onChange={toggleDarkMode}
+          value={false}
+          onChange={handleDarkModeClick}
         />
       </div>
 

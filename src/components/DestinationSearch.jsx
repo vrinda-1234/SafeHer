@@ -33,7 +33,7 @@ export default function DestinationSearch({
   }, [destination]);
 
   return (
-    <div className="relative">
+    <div className="relative font-inter">
       <input
         value={destination}
         onChange={(e) => {

@@ -310,9 +310,9 @@ if (!sosTrackingRef.current) {
 
   // ---------------- UI ----------------
  return (
-  <div className="min-h-screen bg-gradient-to-b from-violet-50 via-white to-purple-50 p-4">
+  <div className="min-h-screen font-inter bg-gradient-to-b from-violet-50 via-white to-purple-50 p-4">
     {/* INPUT SECTION */}
-    <div className="bg-white rounded-3xl shadow-lg p-5 mb-5">
+    <div className="bg-white font-inter rounded-3xl shadow-lg p-5 mb-5">
 
       <div className="mb-4">
   <DestinationSearch
@@ -326,7 +326,7 @@ if (!sosTrackingRef.current) {
       <div className="mb-4 text-sm">
         <p>
           Tracking:
-          <span className="font-bold ml-2">
+          <span className="font-bold font-inter ml-2">
             {tracking ? "TRUE" : "FALSE"}
           </span>
         </p>
@@ -343,7 +343,7 @@ if (!sosTrackingRef.current) {
       {!tracking ? (
         <button
           onClick={startTrip}
-          className="w-full bg-violet-600 text-black border-black py-3 rounded-xl flex items-center justify-center gap-2"
+          className="w-full bg-violet-600 font-syne text-black border-black py-3 rounded-xl flex items-center justify-center gap-2"
         >
           <Play size={18} />
           Start Trip
@@ -351,7 +351,7 @@ if (!sosTrackingRef.current) {
       ) : (
         <button
           onClick={stopTrip}
-          className="w-full bg-red-500 text-white py-3 rounded-xl flex items-center justify-center gap-2"
+          className="w-full font-syne bg-red-500 text-white py-3 rounded-xl flex items-center justify-center gap-2"
         >
           <Square size={18} />
           Stop Trip
@@ -372,9 +372,6 @@ if (!sosTrackingRef.current) {
       currentLocation={currentLocation}
       destination={trip?.destination}
     />
-
-    {/* ALERT */}
-
 
     {/* DEVIATION POPUP */}
     <DeviationModal

@@ -80,7 +80,7 @@ const Signup = () => {
       title="Create Your SafeHer Account"
       subtitle="Your safety journey starts here"
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4 font-inter">
         <InputField
           placeholder="Full Name"
           value={formData.name}
@@ -120,7 +120,7 @@ const Signup = () => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-700 text-white py-3 rounded-lg font-medium hover:bg-blue-800 transition disabled:opacity-50"
+          className="w-full font-syne bg-blue-700 text-white py-3 rounded-lg font-medium hover:bg-blue-800 transition disabled:opacity-50"
         >
           {loading ? "Creating Account..." : "Sign Up"}
         </button>

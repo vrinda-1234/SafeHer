@@ -144,12 +144,12 @@ const Location = () => {
   if (!position) return <p>📍 Getting location...</p>;
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-3xl font-bold text-blue-900">📍 Live Location</h1>
+    <div className="p-6 font-inter space-y-6">
+      <h1 className="text-3xl font-syne font-semibold text-blue-900">📍 Live Location</h1>
 
       {/* 🛡️ SAFETY */}
       <div
-        className={`p-4 rounded-xl text-white ${
+        className={`p-4 font-inter rounded-xl text-white ${
           safetyStatus === "Safe Area"
             ? "bg-green-500"
             : safetyStatus === "Moderate"
@@ -177,7 +177,7 @@ const Location = () => {
 
         <button
           onClick={savePlace}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+          className="bg-blue-600 text-white  font-syne font-semibold px-4 py-2 rounded-lg"
         >
           💾 Save Location
         </button>
@@ -185,7 +185,7 @@ const Location = () => {
 
       {/* 📍 NEARBY SAFE PLACES */}
       <div className="bg-white p-4 rounded-xl shadow">
-        <h2 className="font-semibold mb-2">Nearby Safe Places</h2>
+        <h2 className="font-semibold font-syne  mb-2">Nearby Safe Places</h2>
 
         {nearbyPlaces.map((p, i) => {
           const dist = getDistance(position[0], position[1], p.lat, p.lng);
@@ -201,7 +201,7 @@ const Location = () => {
 
       {/* ⭐ SAVED SAFE LOCATIONS */}
       <div className="bg-white p-4 rounded-xl shadow">
-        <h2 className="font-semibold mb-2">Your Safe Locations</h2>
+        <h2 className="font-semibold font-syne mb-2">Your Safe Locations</h2>
 
         {savedPlaces.length === 0 ? (
           <p className="text-gray-500">No saved places</p>

@@ -66,15 +66,15 @@ const Navbar = () => {
           {/* Dropdown */}
           {open && (
             <div className="absolute right-0 mt-2 w-64 bg-white border rounded-lg shadow-lg p-4 z-50">
-              <p className="font-semibold text-blue-800">
+              <p className="font-semibold font-syne text-blue-800">
                 {user?.name || "No Name"}
               </p>
 
-              <p className="text-sm text-gray-500">
+              <p className="text-sm font-inter text-gray-500">
                 {user?.email || "No Email"}
               </p>
 
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm font-inter text-gray-500 mt-1">
                 📞 {user?.phone || "N/A"}
               </p>
 

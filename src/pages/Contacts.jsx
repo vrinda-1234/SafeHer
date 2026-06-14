@@ -74,7 +74,7 @@ const Contacts = () => {
     });
   };
   return (
-    <div className="min-h-screen bg-gray-100 py-10 px-4">
+    <div className="min-h-screen bg-gray-100 py-10 px-4 font-inter">
       <div className="max-w-4xl mx-auto">
         {errorMsg && (
           <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-xl mb-6">
@@ -84,7 +84,7 @@ const Contacts = () => {
 
         {/* Add Contact Form */}
         <div className="bg-white rounded-3xl shadow-lg p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-5 text-gray-800">
+          <h2 className="text-xl font-syne font-extrabold mb-5 text-gray-800">
             Add New Contact
           </h2>
 
@@ -127,7 +127,7 @@ const Contacts = () => {
             <div className="md:col-span-2">
               <button
                 type="submit"
-                className="w-full bg-blue-900 hover:bg-blue-800 text-white py-3 rounded-xl font-semibold transition duration-300 shadow-md"
+                className="w-full bg-blue-900 hover:bg-blue-800 text-white py-3  font-syne font-extrabold rounded-xl font-semibold transition duration-300 shadow-md"
               >
                 {editingId ? "Update Contact" : "+ Add Contact"}
               </button>
@@ -137,7 +137,7 @@ const Contacts = () => {
 
         {/* Contact List */}
         <div>
-          <h2 className="text-2xl font-semibold text-gray-800 mb-5">
+          <h2 className="text-2xl font-syne  font-semibold text-gray-800 mb-5">
             Saved Contacts
           </h2>
 
@@ -153,7 +153,7 @@ const Contacts = () => {
                   className="bg-white rounded-2xl shadow-md p-5 flex justify-between items-center hover:shadow-xl transition duration-300"
                 >
                   <div>
-                    <h3 className="font-bold text-lg text-gray-800">
+                    <h3 className="font-bold text-lg font-inter text-gray-800">
                       {c.name}
                     </h3>
 
@@ -171,14 +171,14 @@ const Contacts = () => {
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleEdit(c)}
-                      className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-lg"
+                      className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-4 py-2 font-syne  rounded-lg"
                     >
                       Edit
                     </button>
 
                     <button
                       onClick={() => handleDelete(c._id)}
-                      className="bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-lg"
+                      className="bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 font-syne rounded-lg"
                     >
                       Delete
                     </button>

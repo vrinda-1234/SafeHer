@@ -419,6 +419,7 @@ const styles = {
   page: {
     minHeight: "100vh",
     padding: "30px",
+    fontFamily: "'Inter', sans-serif",
   },
 
   card: {
@@ -432,6 +433,7 @@ const styles = {
   header: {
     textAlign: "center",
     marginBottom: "30px",
+    fontFamily: "'Syne', sans-serif",
   },
 
   title: {
@@ -439,11 +441,13 @@ const styles = {
     fontWeight: "700",
     color: "#1f2937",
     marginBottom: "10px",
+    fontFamily: "'Syne', sans-serif",
   },
 
   subtitle: {
     color: "#6b7280",
     fontSize: "15px",
+    fontFamily: "'Syne', sans-serif",
   },
 
   statusCardActive: {
@@ -455,6 +459,7 @@ const styles = {
     borderRadius: "16px",
     padding: "18px",
     marginBottom: "25px",
+    fontFamily: "'Syne', sans-serif",
   },
 
   statusCardInactive: {
@@ -466,6 +471,7 @@ const styles = {
     borderRadius: "16px",
     padding: "18px",
     marginBottom: "25px",
+    fontFamily: "'Syne', sans-serif",
   },
 
   statusDot: {
@@ -485,6 +491,7 @@ const styles = {
     margin: "4px 0 0",
     color: "#6b7280",
     fontSize: "14px",
+    fontFamily: "'Syne', sans-serif",
   },
 
   buttonContainer: {
@@ -501,6 +508,7 @@ const styles = {
     fontSize: "16px",
     fontWeight: "600",
     cursor: "pointer",
+    fontFamily: "'Syne', sans-serif",
   },
 
   stopBtn: {
@@ -512,6 +520,7 @@ const styles = {
     fontSize: "16px",
     fontWeight: "600",
     cursor: "pointer",
+    fontFamily: "'Syne', sans-serif",
   },
 
   statsGrid: {
@@ -519,6 +528,7 @@ const styles = {
     gridTemplateColumns: "1fr 1fr",
     gap: "15px",
     marginBottom: "25px",
+    fontFamily: "'Syne', sans-serif",
   },
 
   statCard: {
@@ -527,6 +537,7 @@ const styles = {
     padding: "20px",
     textAlign: "center",
     border: "1px solid #e5e7eb",
+    fontFamily: "'Syne', sans-serif",
   },
 
   statLabel: {

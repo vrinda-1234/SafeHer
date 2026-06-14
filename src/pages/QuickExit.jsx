@@ -41,15 +41,15 @@ export default function QuickExit() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
+    <div className="min-h-screen flex font-inter items-center justify-center p-6">
       <div className="bg-white shadow-xl rounded-3xl p-8 max-w-md w-full">
-        <h1 className="text-3xl font-bold mb-2">🚪 Quick Exit</h1>
+        <h1 className="text-3xl font-bold font-syne mb-2">🚪 Quick Exit</h1>
 
-        <p className="text-gray-600 mb-6">
+        <p className="text-gray-600 font-inter mb-6">
           Get a realistic incoming call to leave an uncomfortable situation.
         </p>
 
-        <label className="block mb-2 font-medium">Choose Caller</label>
+        <label className="block mb-2 font-inter font-medium">Choose Caller</label>
 
         <select
           value={caller}
@@ -67,15 +67,15 @@ export default function QuickExit() {
           placeholder="HR Manager, Sister..."
           value={customName}
           onChange={(e) => setCustomName(e.target.value)}
-          className="w-full border p-3 rounded-lg mb-4"
+          className="w-full border font-inter p-3 rounded-lg mb-4"
         />
 
-        <label className="block mb-2 font-medium">Call After</label>
+        <label className="block mb-2 font-inter font-medium">Call After</label>
 
         <select
           value={delay}
           onChange={(e) => setDelay(Number(e.target.value))}
-          className="w-full border p-3 rounded-lg mb-6"
+          className="w-full border p-3 font-inter rounded-lg mb-6"
         >
           <option value={0}>Now</option>
           <option value={30}>30 Seconds</option>
@@ -85,7 +85,7 @@ export default function QuickExit() {
 
         <button
           onClick={scheduleCall}
-          className="w-full bg-pink-600 text-white py-3 rounded-lg"
+          className="w-full bg-pink-600 text-white py-3 font-inter rounded-lg"
         >
           Schedule Exit Call
         </button>

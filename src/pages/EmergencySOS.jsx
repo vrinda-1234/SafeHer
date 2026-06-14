@@ -253,17 +253,17 @@ const EmergencySOS = () => {
   // UI
   // -------------------------
   return (
-    <div className="min-h-screen flex items-center justify-center bg-red-50 p-6">
+    <div className="min-h-screen flex items-center justify-center bg-red-50 p-6 font-inter">
       <div className="bg-white p-8 rounded-xl shadow max-w-md w-full text-center">
         {step === "idle" && (
           <>
-            <h1 className="text-3xl font-bold text-red-700 mb-4">
+            <h1 className="text-3xl font-syne font-bold text-red-700 mb-4">
               🚨 Emergency SOS
             </h1>
 
             <button
               onClick={getLocationAndConfirm}
-              className="w-full bg-red-600 text-white py-3 rounded-xl"
+              className="w-full font-syne bg-red-600 text-white py-3 rounded-xl"
             >
               Send SOS Alert
             </button>
@@ -272,7 +272,7 @@ const EmergencySOS = () => {
 
         {step === "confirm" && (
           <>
-            <h2 className="text-xl font-bold text-red-700 mb-3">Confirm SOS</h2>
+            <h2 className="text-xl font-bold font-syne text-red-700 mb-3">Confirm SOS</h2>
 
             <button
               onClick={sendSOS}
@@ -284,7 +284,7 @@ const EmergencySOS = () => {
 
             <button
               onClick={() => setStep("idle")}
-              className="w-full border py-2 rounded-xl mt-2"
+              className="w-full font-syne border py-2 rounded-xl mt-2"
             >
               Cancel
             </button>
@@ -293,7 +293,7 @@ const EmergencySOS = () => {
 
         {step === "sent" && (
           <>
-            <h1 className="text-2xl font-bold text-green-600 mb-3">
+            <h1 className="text-2xl font-syne font-bold text-green-600 mb-3">
               🚨 SOS ACTIVE
             </h1>
 

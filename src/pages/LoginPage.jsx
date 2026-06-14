@@ -63,7 +63,7 @@ const Login = () => {
 
   return (
     <AuthLayout title="Welcome Back" subtitle="Log in to stay protected">
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4 font-inter">
         <InputField
           type="email"
           placeholder="Email Address"
@@ -88,7 +88,7 @@ const Login = () => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-700 text-white py-3 rounded-lg font-medium hover:bg-blue-800 transition disabled:opacity-50"
+          className="w-full font-syne bg-blue-700 text-white py-3 rounded-lg font-medium hover:bg-blue-800 transition disabled:opacity-50"
         >
           {loading ? "Logging in..." : "Login"}
         </button>

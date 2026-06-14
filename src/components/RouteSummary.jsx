@@ -4,12 +4,12 @@ export default function RouteSummary({
   eta = 0,
 }) {
   return (
-    <div className="bg-white rounded-3xl shadow-lg p-5 mt-5">
+    <div className="bg-white font-inter rounded-3xl shadow-lg p-5 mt-5">
       
       <div className="grid grid-cols-3 gap-4">
         
         <div className="bg-violet-50 rounded-2xl p-4 text-center">
-          <p className="text-lg text-gray-500 mb-1">
+          <p className="text-lg font-syne text-gray-500 mb-1">
             Status
           </p>
 
@@ -25,7 +25,7 @@ export default function RouteSummary({
         </div>
 
         <div className="bg-blue-50 rounded-2xl p-4 text-center">
-          <p className="text-lg text-gray-500 mb-1">
+          <p className="text-lg font-syne text-gray-500 mb-1">
             Distance
           </p>
 
@@ -35,7 +35,7 @@ export default function RouteSummary({
         </div>
 
         <div className="bg-orange-50 rounded-2xl p-4 text-center">
-          <p className="text-lg text-gray-500 mb-1">
+          <p className="text-lg font-syne text-gray-500 mb-1">
             ETA
           </p>
 
