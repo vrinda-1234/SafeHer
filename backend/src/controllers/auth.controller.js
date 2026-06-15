@@ -13,8 +13,8 @@ const generateAccessToken = (id) => {
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // ✅ 7 days
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
   
   
@@ -49,7 +49,6 @@ const generateAccessToken = (id) => {
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-
     const user = await User.findOne({ email });
     if (!user)
       return res.status(401).json({ message: "Invalid credentials" });
@@ -66,8 +65,9 @@ export const loginUser = async (req, res) => {
 export const logoutUser = (req, res) => {
   res.cookie("accessToken", "", {
     httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     expires: new Date(0),
   });
-
   res.json({ message: "Logged out" });
 };

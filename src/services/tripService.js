@@ -1,89 +1,39 @@
-const BASE_URL = "http://localhost:5001/api";
+import API from "../utils/api";
 
 export const startTripAPI = async (start, destination) => {
-  const res = await fetch(`${BASE_URL}/trip/start`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-    body: JSON.stringify({
-      start,
-      destination,
-    }),
+  const res = await API.post("/api/trip/start", {
+    start,
+    destination,
   });
 
-  if (!res.ok) {
-    throw new Error("Failed to start trip");
-  }
-
-  return res.json();
+  return res.data;
 };
 
 export const endTripAPI = async () => {
-  const res = await fetch(`${BASE_URL}/trip/end`, {
-    method: "POST",
-    credentials: "include",
-  });
-
-  if (!res.ok) {
-    throw new Error("Failed to end trip");
-  }
-
-  return res.json();
+  const res = await API.post("/api/trip/end");
+  return res.data;
 };
 
 export const getActiveTripAPI = async () => {
-  const res = await fetch(`${BASE_URL}/trip/active`, {
-    credentials: "include",
-  });
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch active trip");
-  }
-
-  return res.json();
+  const res = await API.get("/api/trip/active");
+  return res.data;
 };
 
 export const triggerSOSAPI = async (location) => {
-  const res = await fetch(`${BASE_URL}/sos/trigger`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-    body: JSON.stringify({
-      message: "Route deviation detected",
-      location,
-    }),
+  const res = await API.post("/api/sos/trigger", {
+    message: "Route deviation detected",
+    location,
   });
 
-  if (!res.ok) {
-    throw new Error("Failed to trigger SOS");
-  }
-
-  return res.json();
+  return res.data;
 };
 
-export const updateSOSLocationAPI = async (
-  sosId,
-  location
-) => {
-  const res = await fetch(
-    `${BASE_URL}/sos/update-location`,
-    {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify({
-        sosId,
-        lat: location.lat,
-        lng: location.lng,
-      }),
-    }
-  );
+export const updateSOSLocationAPI = async (sosId, location) => {
+  const res = await API.patch("/api/sos/update-location", {
+    sosId,
+    lat: location.lat,
+    lng: location.lng,
+  });
 
-  return res.json();
+  return res.data;
 };

@@ -24,7 +24,7 @@ const app = express();
 /* ================= MIDDLEWARE ================= */
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: process.env.FRONTEND_URL,
     credentials: true,
   })
 );
@@ -49,7 +49,7 @@ const server = http.createServer(app);
 /* ================= SOCKET.IO SETUP ================= */
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: process.env.FRONTEND_URL,
     credentials: true,
   },
 });
@@ -72,11 +72,6 @@ io.on("connection", (socket) => {
     console.log(`🚪 Left SOS room: ${sosId}`);
   });
 
-  // optional debug event
-  socket.on("leaveSOS", (sosId) => {
-    socket.leave(sosId);
-    console.log(`🚪 Left SOS room: ${sosId}`);
-  });
   socket.on("disconnect", () => {
     console.log("❌ Socket disconnected:", socket.id);
   });

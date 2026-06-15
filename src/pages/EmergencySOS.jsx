@@ -1,10 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import API from "../utils/api";
 import toast from "react-hot-toast";
+import { haversine } from "../utils/haversine";
+
+const SEND_INTERVAL = 3000;
+const MIN_DISTANCE_METERS = 15; // use real meters via haversine, same threshold as SoundDetector
 
 const EmergencySOS = () => {
   const FRONTEND_URL =
-    import.meta.env.VITE_FRONTEND_URL || "http://localhost:3000";
+    process.env.REACT_APP_FRONTEND_URL || "http://localhost:3000";
 
   const [step, setStep] = useState("idle");
   const [contacts, setContacts] = useState([]);
@@ -12,10 +16,16 @@ const EmergencySOS = () => {
   const [sosId, setSosId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [trackingLink, setTrackingLink] = useState("");
+  // FIX: added sosActive state so UI re-renders when SOS status changes
+  const [sosActive, setSosActive] = useState(false);
 
-  const lastLat = useRef(null);
-  const lastLng = useRef(null);
+  const lastSentLatRef = useRef(null);
+  const lastSentLngRef = useRef(null);
+  const currentLatRef = useRef(null);
+  const currentLngRef = useRef(null);
   const watchRef = useRef(null);
+  const intervalRef = useRef(null);
+  const sosIdRef = useRef(null);
 
   // -------------------------
   // LOAD CONTACTS
@@ -23,17 +33,110 @@ const EmergencySOS = () => {
   useEffect(() => {
     const fetchContacts = async () => {
       try {
-        const res = await API.get("/api/contact", {
-          withCredentials: true,
-        });
+        const res = await API.get("/api/contact", { withCredentials: true });
         setContacts(res.data || []);
       } catch {
         toast.error("Failed to load contacts");
       }
     };
-
     fetchContacts();
   }, []);
+
+  // -------------------------
+  // PAGE VISIBILITY — push location immediately on tab focus
+  // -------------------------
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible" && sosIdRef.current) {
+        sendLocationUpdate(sosIdRef.current, true);
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, []);
+
+  // -------------------------
+  // SEND LOCATION UPDATE
+  // FIX: replaced raw coordinate subtraction with proper haversine distance check
+  // -------------------------
+  const sendLocationUpdate = async (id, force = false) => {
+    if (!id) return;
+    if (currentLatRef.current === null || currentLngRef.current === null)
+      return;
+
+    const lat = currentLatRef.current;
+    const lng = currentLngRef.current;
+
+    if (!force && lastSentLatRef.current !== null) {
+      const distanceMeters = haversine(
+        lastSentLatRef.current,
+        lastSentLngRef.current,
+        lat,
+        lng
+      );
+      if (distanceMeters < MIN_DISTANCE_METERS) return;
+    }
+
+    lastSentLatRef.current = lat;
+    lastSentLngRef.current = lng;
+
+    try {
+      await API.patch(
+        "/api/sos/update-location",
+        { sosId: id, lat, lng },
+        { withCredentials: true }
+      );
+      console.log("📍 Location sent", { lat, lng });
+    } catch (err) {
+      console.log("Location update failed:", err);
+    }
+  };
+
+  // -------------------------
+  // LIVE TRACKING
+  // -------------------------
+  const startTracking = (id) => {
+    sosIdRef.current = id;
+    setSosActive(true); // FIX: keep state in sync for UI
+
+    if (!watchRef.current) {
+      watchRef.current = navigator.geolocation.watchPosition(
+        (pos) => {
+          currentLatRef.current = pos.coords.latitude;
+          currentLngRef.current = pos.coords.longitude;
+          setLocation({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          });
+        },
+        (err) => console.log("GPS error:", err),
+        { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 }
+      );
+    }
+
+    if (!intervalRef.current) {
+      intervalRef.current = setInterval(() => {
+        sendLocationUpdate(sosIdRef.current);
+      }, SEND_INTERVAL);
+    }
+  };
+
+  const stopTracking = () => {
+    if (watchRef.current !== null) {
+      navigator.geolocation.clearWatch(watchRef.current);
+      watchRef.current = null;
+    }
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    sosIdRef.current = null;
+    setSosActive(false); // FIX: keep state in sync for UI
+    lastSentLatRef.current = null;
+    lastSentLngRef.current = null;
+    currentLatRef.current = null;
+    currentLngRef.current = null;
+  };
 
   // -------------------------
   // GET LOCATION
@@ -46,112 +149,17 @@ const EmergencySOS = () => {
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        });
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        currentLatRef.current = lat;
+        currentLngRef.current = lng;
+        setLocation({ lat, lng });
         setStep("confirm");
       },
-      () => {
-        toast.error("Failed to fetch location");
-      },
+      () => toast.error("Failed to fetch location"),
       { enableHighAccuracy: false, timeout: 10000 }
     );
   };
-
-  // -------------------------
-  // LIVE TRACKING
-  // -------------------------
-  const startTracking = (id) => {
-    if (watchRef.current) return;
-
-    let lastSentTime = 0;
-    const MIN_INTERVAL = 3000; // 3 sec
-    const MIN_DISTANCE = 0.00015; // ~10–15 meters
-
-    watchRef.current = navigator.geolocation.watchPosition(
-      async (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-
-        const now = Date.now();
-
-        // initial case
-        if (!lastLat.current || !lastLng.current) {
-          lastLat.current = lat;
-          lastLng.current = lng;
-        }
-
-        // distance check (simple)
-        const distance =
-          Math.abs(lat - lastLat.current) + Math.abs(lng - lastLng.current);
-
-        // throttle condition
-        if (now - lastSentTime < MIN_INTERVAL || distance < MIN_DISTANCE) {
-          return;
-        }
-
-        lastLat.current = lat;
-        lastLng.current = lng;
-        lastSentTime = now;
-
-        setLocation({ lat, lng });
-
-        try {
-          console.log("📡 sending location update", { lat, lng, id });
-          await API.patch(
-            "/api/sos/update-location",
-            {
-              sosId: id,
-              lat,
-              lng,
-            },
-            { withCredentials: true }
-          );
-        } catch (err) {
-          console.log("Location update failed");
-        }
-      },
-      (err) => console.log("GPS error:", err),
-      {
-        enableHighAccuracy: true,
-        maximumAge: 1000,
-        timeout: 10000,
-      }
-    );
-  };
-  // const startTracking = (id) => {
-  //   if (watchRef.current !== null) return;
-
-  //   watchRef.current = navigator.geolocation.watchPosition(async (pos) => {
-  //     const lat = pos.coords.latitude;
-  //     const lng = pos.coords.longitude;
-
-  //     if (
-  //       lastLat.current !== null &&
-  //       lastLng.current !== null &&
-  //       Math.abs(lat - lastLat.current) + Math.abs(lng - lastLng.current) <
-  //         0.0002
-  //     ) {
-  //       return;
-  //     }
-
-  //     lastLat.current = lat;
-  //     lastLng.current = lng;
-
-  //     setLocation({ lat, lng });
-
-  //     try {
-  //       await API.patch(
-  //         "/api/sos/update-location",
-  //         { sosId: id, lat, lng },
-  //         { withCredentials: true }
-  //       );
-  //     } catch (err) {
-  //       console.log("Location update failed");
-  //     }
-  //   });
-  // };
 
   // -------------------------
   // SEND SOS
@@ -161,12 +169,10 @@ const EmergencySOS = () => {
       toast.error("Add emergency contacts first");
       return;
     }
-
     if (!location) {
       toast.error("Location not available");
       return;
     }
-
     if (step === "sent") return;
 
     setLoading(true);
@@ -174,18 +180,12 @@ const EmergencySOS = () => {
     try {
       const res = await API.post(
         "/api/sos/trigger",
-        {
-          location,
-          message: "Emergency SOS",
-        },
+        { location, message: "Emergency SOS" },
         { withCredentials: true }
       );
 
       const msg = res.data?.message;
 
-      // -------------------------
-      // HANDLE BACKEND STATES
-      // -------------------------
       if (msg?.toLowerCase().includes("already")) {
         toast.info("SOS already active. Tracking continues.");
       } else if (msg?.toLowerCase().includes("cooldown")) {
@@ -196,10 +196,8 @@ const EmergencySOS = () => {
       }
 
       const id = res.data.sosId;
-
       setSosId(id);
-      const trackingUrl = `${FRONTEND_URL}/public/track/${id}`;
-      setTrackingLink(trackingUrl);
+      setTrackingLink(`${FRONTEND_URL}/public/track/${id}`);
       startTracking(id);
       setStep("sent");
     } catch (err) {
@@ -221,33 +219,30 @@ const EmergencySOS = () => {
         await API.put(
           `/api/sos/${sosId}/resolve`,
           {},
-          {
-            withCredentials: true,
-          }
+          { withCredentials: true }
         );
       }
-
       toast.success("SOS resolved");
     } catch {
       toast.error("Failed to resolve SOS");
     }
-    if (watchRef.current) {
-      navigator.geolocation.clearWatch(watchRef.current);
-      watchRef.current = null;
-    }
-    // if (watchRef.current) {
-    //   navigator.geolocation.clearWatch(watchRef.current);
-    //   watchRef.current = null;
-    // }
+
+    stopTracking();
 
     setStep("idle");
     setSosId(null);
     setTrackingLink("");
     setLocation(null);
-
-    lastLat.current = null;
-    lastLng.current = null;
   };
+
+  // -------------------------
+  // CLEANUP ON UNMOUNT
+  // -------------------------
+  useEffect(() => {
+    return () => {
+      stopTracking();
+    };
+  }, []);
 
   // -------------------------
   // UI
@@ -260,7 +255,6 @@ const EmergencySOS = () => {
             <h1 className="text-3xl font-syne font-bold text-red-700 mb-4">
               🚨 Emergency SOS
             </h1>
-
             <button
               onClick={getLocationAndConfirm}
               className="w-full font-syne bg-red-600 text-white py-3 rounded-xl"
@@ -272,8 +266,9 @@ const EmergencySOS = () => {
 
         {step === "confirm" && (
           <>
-            <h2 className="text-xl font-bold font-syne text-red-700 mb-3">Confirm SOS</h2>
-
+            <h2 className="text-xl font-bold font-syne text-red-700 mb-3">
+              Confirm SOS
+            </h2>
             <button
               onClick={sendSOS}
               disabled={loading}
@@ -281,7 +276,6 @@ const EmergencySOS = () => {
             >
               {loading ? "Sending..." : "Confirm & Send"}
             </button>
-
             <button
               onClick={() => setStep("idle")}
               className="w-full font-syne border py-2 rounded-xl mt-2"
@@ -305,6 +299,20 @@ const EmergencySOS = () => {
                 src={`https://maps.google.com/maps?q=${location.lat},${location.lng}&z=15&output=embed`}
               />
             )}
+
+            {trackingLink && (
+              <p className="text-xs text-gray-500 mt-2 break-all">
+                Tracking link:{" "}
+                <a href={trackingLink} className="underline">
+                  {trackingLink}
+                </a>
+              </p>
+            )}
+
+            {/* FIX: sosActive is now proper state, renders correctly */}
+            <p className="text-xs text-gray-400 mt-1">
+              SOS status: {sosActive ? "🟢 Tracking active" : "🔴 Inactive"}
+            </p>
 
             <button
               onClick={stopSOS}
