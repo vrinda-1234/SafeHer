@@ -91,7 +91,7 @@ const Dashboard = () => {
         />
         <Card
           title="📍 Live Location"
-          desc="Share your live location securely"
+          desc="View your live location and nearby safe places in real time"
           onClick={() => setActive("location")}
         />
         <Card

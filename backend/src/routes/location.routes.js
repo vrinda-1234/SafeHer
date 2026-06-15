@@ -29,6 +29,8 @@ router.delete(
   deletePlace
 );
 // ================= 🆓 NEARBY SAFE PLACES =================
+const nearbyCache = new Map(); // 🧠 simple in-memory cache
+
 router.get("/nearby", async (req, res) => {
   const { lat, lng } = req.query;
 
@@ -37,11 +39,20 @@ router.get("/nearby", async (req, res) => {
   }
 
   try {
+    // 🧠 create cache key (rounded to reduce duplicate calls)
+    const key = `${Math.round(lat * 100)}_${Math.round(lng * 100)}`;
+
+    // ⚡ STEP 1: check cache first
+    if (nearbyCache.has(key)) {
+      return res.json(nearbyCache.get(key));
+    }
+
+    // 🌍 STEP 2: Overpass query (reduced radius = more stable)
     const query = `
 [out:json][timeout:25];
 (
-  node["amenity"="police"](around:5000,${lat},${lng});
-  node["amenity"="hospital"](around:5000,${lat},${lng});
+  node["amenity"="police"](around:3000,${lat},${lng});
+  node["amenity"="hospital"](around:3000,${lat},${lng});
 );
 out body;
 `;
@@ -58,6 +69,7 @@ out body;
       }
     );
 
+    // 🧾 STEP 3: format response
     const places = (response.data.elements || []).map((p) => ({
       name: p.tags?.name || "Unnamed Place",
       lat: p.lat,
@@ -65,7 +77,15 @@ out body;
       types: [p.tags?.amenity],
     }));
 
-    res.json(places);
+    // 💾 STEP 4: store in cache
+    nearbyCache.set(key, places);
+
+    // optional: auto-clear cache after 10 minutes
+    setTimeout(() => {
+      nearbyCache.delete(key);
+    }, 10 * 60 * 1000);
+
+    return res.json(places);
   } catch (err) {
     console.error(
       "Overpass Error:",
@@ -73,8 +93,8 @@ out body;
       err.response?.data || err.message
     );
 
-    // Return empty array instead of crashing frontend
-    res.json([]);
+    // 🛑 fallback safe response
+    return res.json([]);
   }
 });
 
