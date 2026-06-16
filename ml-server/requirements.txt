@@ -6,3 +6,4 @@ tensorflow
 tensorflow_hub
 scikit-learn
 soundfile
+gunicorn
