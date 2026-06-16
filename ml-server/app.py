@@ -1,44 +1,62 @@
+import os
+import pickle
+import tempfile
+import traceback
+
+# Suppress TF/CUDA noise before any TF import
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+os.environ["CUDA_VISIBLE_DEVICES"] = ""  # Force CPU-only
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import tensorflow_hub as hub
 import numpy as np
 import librosa
-import tempfile
-import os
-import pickle
 
 app = Flask(__name__)
 CORS(app)
 
 # =========================
-# GLOBALS (lazy load model)
+# LOAD EVERYTHING AT STARTUP
+# (with --preload in gunicorn, this runs once in the master process
+#  and is shared across workers via fork — saves RAM & avoids timeouts)
 # =========================
-yamnet = None
+print("Loading YAMNet model...")
+try:
+    yamnet = hub.load("https://tfhub.dev/google/yamnet/1")
+    print("YAMNet loaded successfully.")
+except Exception as e:
+    print(f"FATAL: Could not load YAMNet: {e}")
+    raise
 
-def load_model():
-    global yamnet
-    if yamnet is None:
-        print("Loading YAMNet (this may take time)...")
-        yamnet = hub.load("https://tfhub.dev/google/yamnet/1")
-        print("YAMNet loaded successfully")
-
-# =========================
-# LOAD CLASSIFIER ON START
-# =========================
 print("Loading classifier...")
-with open("classifier.pkl", "rb") as f:
-    clf = pickle.load(f)
+try:
+    with open("classifier.pkl", "rb") as f:
+        clf = pickle.load(f)
 
-with open("label_map.pkl", "rb") as f:
-    label_map = pickle.load(f)
+    with open("label_map.pkl", "rb") as f:
+        label_map = pickle.load(f)
+    print("Classifier loaded successfully.")
+except FileNotFoundError as e:
+    print(f"FATAL: Missing pickle file: {e}")
+    raise
 
 
 # =========================
 # EMBEDDING FUNCTION
 # =========================
 def get_embedding(waveform):
-    scores, embeddings, spectrogram = yamnet(waveform)
+    _, embeddings, _ = yamnet(waveform)
     return np.mean(embeddings.numpy(), axis=0)
+
+
+# =========================
+# HEALTH CHECK ROUTE
+# (Render pings / — give it a 200 so workers don't get flagged)
+# =========================
+@app.route("/", methods=["GET"])
+def health():
+    return jsonify({"status": "ok", "message": "SaHer ML server is running"}), 200
 
 
 # =========================
@@ -46,63 +64,80 @@ def get_embedding(waveform):
 # =========================
 @app.route("/predict", methods=["POST"])
 def predict():
+    temp_path = None
     try:
-        # ensure model is loaded only when needed
-        load_model()
-
         if "file" not in request.files:
             return jsonify({"error": "No file uploaded"}), 400
 
         file = request.files["file"]
 
-        # save temp file
-        temp = tempfile.NamedTemporaryFile(delete=False, suffix=".webm")
-        file.save(temp.name)
+        if file.filename == "":
+            return jsonify({"error": "Empty filename"}), 400
 
-        # load audio
-        waveform, sr = librosa.load(temp.name, sr=16000)
-        os.remove(temp.name)
+        # Determine suffix from content type for ffmpeg/librosa compatibility
+        content_type = file.content_type or ""
+        suffix = ".webm"
+        if "ogg" in content_type:
+            suffix = ".ogg"
+        elif "wav" in content_type:
+            suffix = ".wav"
+        elif "mp4" in content_type or "m4a" in content_type:
+            suffix = ".mp4"
+
+        # Save to temp file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            file.save(tmp.name)
+            temp_path = tmp.name
+
+        # Load & resample to 16 kHz mono (YAMNet requirement)
+        waveform, _ = librosa.load(temp_path, sr=16000, mono=True)
 
         if len(waveform) == 0:
-            return jsonify({"error": "empty audio"}), 400
+            return jsonify({"error": "Audio file is empty or unreadable"}), 400
 
-        # limit audio length (CRITICAL for Render stability)
-        waveform = waveform[:16000 * 5]
+        # Cap at 5 seconds to keep RAM + latency predictable on free tier
+        MAX_SAMPLES = 16000 * 5
+        waveform = waveform[:MAX_SAMPLES]
 
-        # normalize
-        waveform = waveform / (np.max(np.abs(waveform)) + 1e-6)
+        # Normalize
+        peak = np.max(np.abs(waveform))
+        if peak > 0:
+            waveform = waveform / (peak + 1e-6)
 
-        # embedding
-        embedding = get_embedding(waveform)
-        embedding = embedding.reshape(1, -1)
+        # Get YAMNet embedding
+        embedding = get_embedding(waveform).reshape(1, -1)
 
-        # prediction
+        # Classifier prediction
         pred = clf.predict(embedding)[0]
-        prob = float(clf.predict_proba(embedding).max())
-
+        proba = clf.predict_proba(embedding)[0]
+        confidence = float(proba.max())
         label = label_map[pred]
 
-        # danger logic
-        is_danger = (
-            label == "distress" or
-            (label == "suspicious" and prob > 0.6)
-        )
+        # Danger logic
+        is_danger = label == "distress" or (label == "suspicious" and confidence > 0.6)
 
         return jsonify({
             "label": label,
-            "confidence": prob,
-            "danger": bool(is_danger)
+            "confidence": round(confidence, 4),
+            "danger": bool(is_danger),
         })
 
+    except librosa.util.exceptions.ParameterError as e:
+        return jsonify({"error": f"Audio processing error: {str(e)}"}), 422
+
     except Exception as e:
-        import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
+    finally:
+        # Always clean up the temp file
+        if temp_path and os.path.exists(temp_path):
+            os.remove(temp_path)
+
 
 # =========================
-# RUN APP
+# RUN APP (dev only — use gunicorn in production)
 # =========================
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port, debug=False)
