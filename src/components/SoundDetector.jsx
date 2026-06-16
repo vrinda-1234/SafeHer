@@ -332,7 +332,7 @@ const SoundDetector = () => {
 
         // 60s timeout, 2 retries — handles cold starts on Render free tier
         const res = await fetchWithRetry(
-          `${ML_URL}/predict`,
+          `${API_URL}/api/ml/predict`,
           { method: "POST", body: formData },
           60000,
           2
