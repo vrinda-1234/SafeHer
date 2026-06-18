@@ -12,47 +12,12 @@ const socket = io(`${API_URL}`, {
   autoConnect: false,
 });
 
-// ==========================
-// WAKE UP ML SERVER
-// Call this once on mount so the server is warm before first /predict
-// ==========================
-const wakeUpML = async () => {
-  try {
-    await fetch(`${ML_URL}/`, { method: "GET" });
-    console.log("✅ ML server warmed up");
-  } catch (err) {
-    console.warn("⚠️ ML wake-up ping failed:", err);
-  }
-};
-
-// ==========================
-// FETCH WITH TIMEOUT + RETRY
-// ==========================
-const fetchWithRetry = async (url, options, timeoutMs = 60000, retries = 2) => {
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-    try {
-      const res = await fetch(url, { ...options, signal: controller.signal });
-      clearTimeout(timer);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res;
-    } catch (err) {
-      clearTimeout(timer);
-      const isLast = attempt === retries;
-      if (isLast) throw err;
-      console.warn(`Attempt ${attempt + 1} failed, retrying...`);
-      await new Promise((r) => setTimeout(r, 2000)); // wait 2s between retries
-    }
-  }
-};
-
 const SoundDetector = () => {
   const [recording, setRecording] = useState(false);
   const [lastStatus, setLastStatus] = useState("Idle");
   const [dangerCount, setDangerCount] = useState(0);
+  // FIX: sosActive is now proper React state so UI re-renders correctly
   const [sosActive, setSosActive] = useState(false);
-  const [mlReady, setMlReady] = useState(false); // NEW: show warming state
 
   // Recording
   const mediaRecorderRef = useRef(null);
@@ -76,19 +41,17 @@ const SoundDetector = () => {
   const sosActiveRef = useRef(false);
   const intervalRef = useRef(null);
 
+  // Helper to keep ref + state in sync
   const setSosActiveSync = (val) => {
     sosActiveRef.current = val;
     setSosActive(val);
   };
 
   // ==========================
-  // SYNC SOS ON MOUNT + WAKE ML
+  // SYNC SOS ON MOUNT
   // ==========================
   useEffect(() => {
     socket.connect();
-
-    // Ping ML server immediately so it's warm when user starts monitoring
-    wakeUpML().then(() => setMlReady(true));
 
     const syncSOS = async () => {
       try {
@@ -114,14 +77,17 @@ const SoundDetector = () => {
 
     return () => {
       socket.disconnect();
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      if (watchIdRef.current !== null)
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+      if (watchIdRef.current !== null) {
         navigator.geolocation.clearWatch(watchIdRef.current);
+      }
     };
   }, []);
 
   // ==========================
-  // PAGE VISIBILITY
+  // PAGE VISIBILITY — push immediately on tab return
   // ==========================
   useEffect(() => {
     const onVisible = () => {
@@ -142,7 +108,10 @@ const SoundDetector = () => {
   // ==========================
   const startLiveLocation = () => {
     if (watchIdRef.current !== null) return;
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) {
+      console.log("❌ Geolocation not supported");
+      return;
+    }
 
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
@@ -167,7 +136,11 @@ const SoundDetector = () => {
   // SEND LOCATION UPDATE
   // ==========================
   const sendLocationUpdate = async (sosId, force = false) => {
-    if (!sosId || !locationRef.current) return;
+    if (!sosId) return;
+    if (!locationRef.current) {
+      console.log("⏳ Waiting for GPS...");
+      return;
+    }
 
     const { lat, lng } = locationRef.current;
 
@@ -198,6 +171,7 @@ const SoundDetector = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sosId, lat, lng }),
       });
+      console.log("📍 Location sent");
     } catch (err) {
       console.error("❌ Location update failed:", err);
     }
@@ -209,7 +183,9 @@ const SoundDetector = () => {
   const startLocationInterval = (sosId) => {
     if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = setInterval(() => {
-      if (sosActiveRef.current) sendLocationUpdate(sosId);
+      if (sosActiveRef.current) {
+        sendLocationUpdate(sosId);
+      }
     }, SEND_INTERVAL);
   };
 
@@ -263,8 +239,10 @@ const SoundDetector = () => {
 
     activeSosIdRef.current = data.sosId;
     setSosActiveSync(true);
+
     socket.emit("joinSOS", data.sosId);
     startLocationInterval(data.sosId);
+
     setLastStatus("🚨 AI SOS ACTIVE");
   };
 
@@ -273,30 +251,39 @@ const SoundDetector = () => {
   // ==========================
   const startChunk = (mediaRecorder) => {
     if (!activeRef.current) return;
+
     chunksRef.current = [];
     mediaRecorder.start();
+
     setTimeout(() => {
-      if (mediaRecorder.state === "recording") mediaRecorder.stop();
+      if (mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+      }
     }, 4000);
   };
 
   // ==========================
   // START MONITORING
+  // FIX: wrapped getUserMedia in try/catch to handle mic denial gracefully
   // ==========================
   const startMonitoring = async () => {
     activeRef.current = true;
+
     startLiveLocation();
 
     let stream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch (err) {
+      // FIX: reset state cleanly if mic access is denied or unavailable
       activeRef.current = false;
       setRecording(false);
       setLastStatus("❌ Mic access denied");
+      console.error("Mic error:", err);
       return;
     }
 
+    // Only set recording true after mic is confirmed available
     setRecording(true);
     streamRef.current = stream;
 
@@ -307,36 +294,21 @@ const SoundDetector = () => {
       if (activeRef.current) chunksRef.current.push(e.data);
     };
 
-    // ==========================
-    // ONSTOP — FIXED: timeout + retry + better error messages
-    // ==========================
     mediaRecorder.onstop = async () => {
       if (!activeRef.current || isRestartingRef.current) return;
       isRestartingRef.current = true;
 
       const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-
-      // Skip sending if chunk is too small (silence / mic blip)
-      if (blob.size < 1000) {
-        console.log("Chunk too small, skipping");
-        isRestartingRef.current = false;
-        if (activeRef.current) startChunk(mediaRecorder);
-        return;
-      }
+      console.log("Audio chunk size:", blob.size);
 
       try {
-        setLastStatus("🔍 Analyzing...");
-
         const formData = new FormData();
-        formData.append("file", blob, "audio.webm");
+        formData.append("file", blob);
 
-        // 60s timeout, 2 retries — handles cold starts on Render free tier
-        const res = await fetchWithRetry(
-          `${API_URL}/api/ml/predict`,
-          { method: "POST", body: formData },
-          60000,
-          2
-        );
+        const res = await fetch(`${ML_URL}/predict`, {
+          method: "POST",
+          body: formData,
+        });
 
         const data = await res.json();
         console.log("ML RESULT:", data);
@@ -351,6 +323,7 @@ const SoundDetector = () => {
 
         if (dangerStreakRef.current >= 3) {
           setLastStatus("🚨 DANGER CONFIRMED");
+          console.log("SOS is being triggered");
           dangerStreakRef.current = 0;
           await triggerAISOS();
         } else {
@@ -361,13 +334,8 @@ const SoundDetector = () => {
           sendLocationUpdate(activeSosIdRef.current);
         }
       } catch (err) {
-        console.error("ML prediction failed after retries:", err);
-        // Don't say "ML error" for every cold-start — show something friendlier
-        if (err.name === "AbortError") {
-          setLastStatus("⏳ Server waking up, retrying...");
-        } else {
-          setLastStatus("⚠️ ML unavailable, retrying...");
-        }
+        console.error("ML prediction failed:", err);
+        setLastStatus("⚠️ ML error, retrying...");
       }
 
       isRestartingRef.current = false;
@@ -384,10 +352,15 @@ const SoundDetector = () => {
     activeRef.current = false;
     setRecording(false);
 
-    if (mediaRecorderRef.current?.state === "recording") {
+    if (
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state === "recording"
+    ) {
       mediaRecorderRef.current.stop();
     }
-    streamRef.current?.getTracks().forEach((t) => t.stop());
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+    }
 
     stopLiveLocation();
     lastSentLatRef.current = null;
@@ -404,9 +377,11 @@ const SoundDetector = () => {
           method: "PUT",
           credentials: "include",
         });
+        console.log("✅ SOS Resolved");
       } catch (err) {
         console.error("❌ Resolve failed:", err);
       }
+
       socket.emit("leaveSOS", activeSosIdRef.current);
     }
 
@@ -414,24 +389,19 @@ const SoundDetector = () => {
     activeSosIdRef.current = null;
     dangerStreakRef.current = 0;
     setDangerCount(0);
+
     setLastStatus("Stopped");
   };
 
   return (
     <div style={styles.page}>
       <div style={styles.card}>
-        {/* ML warming banner */}
-        {!mlReady && (
-          <div style={styles.warmingBanner}>
-            ⏳ Warming up AI server, please wait...
-          </div>
-        )}
-
         <div
           style={
             recording ? styles.statusCardActive : styles.statusCardInactive
           }
         >
+          {/* FIX: dot color now reflects actual recording state */}
           <div
             style={{
               ...styles.statusDot,
@@ -489,11 +459,8 @@ const SoundDetector = () => {
           </div>
           <div style={styles.consoleRow}>
             <span>SOS</span>
+            {/* FIX: now reads from state, not ref — re-renders correctly */}
             <strong>{sosActive ? "🚨 Active" : "—"}</strong>
-          </div>
-          <div style={styles.consoleRow}>
-            <span>ML Server</span>
-            <strong>{mlReady ? "🟢 Ready" : "⏳ Warming..."}</strong>
           </div>
         </div>
       </div>
@@ -511,16 +478,6 @@ const styles = {
     width: "100%",
     borderRadius: "24px",
     padding: "32px",
-  },
-  warmingBanner: {
-    background: "#fef9c3",
-    border: "1px solid #fde68a",
-    borderRadius: "12px",
-    padding: "12px 16px",
-    marginBottom: "20px",
-    fontSize: "14px",
-    color: "#92400e",
-    textAlign: "center",
   },
   statusCardActive: {
     display: "flex",
@@ -550,14 +507,21 @@ const styles = {
     borderRadius: "50%",
     flexShrink: 0,
   },
-  statusTitle: { margin: 0, fontSize: "16px", fontWeight: "600" },
+  statusTitle: {
+    margin: 0,
+    fontSize: "16px",
+    fontWeight: "600",
+  },
   statusText: {
     margin: "4px 0 0",
     color: "#6b7280",
     fontSize: "14px",
     fontFamily: "'Syne', sans-serif",
   },
-  buttonContainer: { textAlign: "center", marginBottom: "25px" },
+  buttonContainer: {
+    textAlign: "center",
+    marginBottom: "25px",
+  },
   startBtn: {
     background: "#16a34a",
     color: "#fff",
@@ -601,15 +565,27 @@ const styles = {
     marginBottom: "8px",
     fontSize: "14px",
   },
-  statValue: { fontWeight: "700", fontSize: "16px", color: "#111827" },
-  dangerValue: { fontWeight: "700", fontSize: "28px", color: "#dc2626" },
+  statValue: {
+    fontWeight: "700",
+    fontSize: "16px",
+    color: "#111827",
+  },
+  dangerValue: {
+    fontWeight: "700",
+    fontSize: "28px",
+    color: "#dc2626",
+  },
   console: {
     background: "#fff",
     borderRadius: "18px",
     padding: "20px",
     border: "1px solid #e5e7eb",
   },
-  consoleTitle: { marginTop: 0, marginBottom: "18px", color: "#1f2937" },
+  consoleTitle: {
+    marginTop: 0,
+    marginBottom: "18px",
+    color: "#1f2937",
+  },
   consoleRow: {
     display: "flex",
     justifyContent: "space-between",

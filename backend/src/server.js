@@ -15,7 +15,6 @@ import contactRoutes from "./routes/contact.routes.js";
 import locationRoutes from "./routes/location.routes.js";
 import profileRoutes from "./routes/profile.routes.js";
 import tripRoutes from "./routes/trip.routes.js";
-import mlRoutes from "./routes/ml.routes.js";
 /* ================= DB CONNECT ================= */
 connectDB();
 
@@ -40,7 +39,6 @@ app.use("/api/contact", contactRoutes);
 app.use("/api/location", locationRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/trip", tripRoutes);
-app.use("/api/ml", mlRoutes);
 app.get("/", (req, res) => {
   res.send("SafeHer backend running 🚀");
 });
