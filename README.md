@@ -90,7 +90,7 @@ This project is developed for educational and demonstration purposes.
 
 ---
 
-<h2 align="center">🌸 SafeHer</h2>
+<h2 align="center">SafeHer</h2>
 
 <h3 align="center">
 Made by Women, for Women ❤️
