@@ -1,70 +1,211 @@
-# Getting Started with Create React App
+# 🛡️ SafeHer
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+**SafeHer** is an AI-powered women's safety platform that provides real-time emergency assistance through live location tracking, SOS alerts, and intelligent audio-based distress detection.
 
-## Available Scripts
+The application continuously monitors safety conditions and can automatically trigger emergency alerts when signs of distress are detected, helping users receive assistance faster during critical situations.
 
-In the project directory, you can run:
+---
 
-### `npm start`
+## ✨ Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### 🚨 One-Tap SOS Alert
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+* Instantly send emergency alerts to trusted contacts.
+* Share live location during emergencies.
+* Generate a unique tracking link for guardians.
 
-### `npm test`
+### 📍 Real-Time Location Tracking
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+* Continuous GPS tracking during active SOS sessions.
+* Live route updates visible to emergency contacts.
+* Distance and movement monitoring.
 
-### `npm run build`
+### 🎤 AI-Based Distress Detection
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+* Uses Google's YAMNet audio classification model.
+* Detects distress-related sounds from ambient audio.
+* Automatically triggers alerts when suspicious patterns are detected.
+* Reduces dependency on manual intervention during emergencies.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### 👥 Emergency Contact Management
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+* Add and manage trusted contacts.
+* Notify multiple guardians simultaneously.
+* Secure contact storage and retrieval.
 
-### `npm run eject`
+### 🌐 Live Tracking Dashboard
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+* Real-time map visualization.
+* SOS status monitoring.
+* Continuous location updates.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### 🔒 Secure Authentication
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+* User registration and login.
+* JWT-based authentication.
+* Protected routes and secure session management.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+---
 
-## Learn More
+## 🏗️ System Architecture
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Frontend (React)
+↓
+Backend (Node.js + Express)
+↓
+Socket.IO (Real-Time Communication)
+↓
+MongoDB (Database)
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+AI Audio Service (Flask)
+↓
+YAMNet Feature Extraction
+↓
+Logistic Regression Classifier
+↓
+Distress Prediction
 
-### Code Splitting
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## 🛠️ Tech Stack
 
-### Analyzing the Bundle Size
+### Frontend
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+* React.js
+* React Router
+* Socket.IO Client
+* HTML5
+* CSS3
 
-### Making a Progressive Web App
+### Backend
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+* Node.js
+* Express.js
+* Socket.IO
+* JWT Authentication
+* MongoDB
 
-### Advanced Configuration
+### Machine Learning
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+* TensorFlow Hub
+* YAMNet
+* Scikit-Learn
+* Logistic Regression
+* Librosa
 
 ### Deployment
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+* Vercel (Frontend)
+* Render / Hugging Face Spaces (Backend & ML Services)
 
-### `npm run build` fails to minify
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## 🤖 AI Pipeline
+
+1. Audio is captured from the user's device.
+2. Audio is processed using YAMNet.
+3. YAMNet generates high-dimensional embeddings.
+4. Embeddings are passed to a trained Logistic Regression classifier.
+5. Audio is classified into:
+
+* Safe
+* Suspicious
+* Distress
+
+6. If distress is detected, SafeHer can trigger emergency workflows automatically.
+
+---
+
+## 📂 Project Structure
+
+SafeHer/
+├── frontend/
+├── backend/
+├── ml-server/
+│ ├── app.py
+│ ├── train_classifier.py
+│ ├── classifier.pkl
+│ ├── label_map.pkl
+│ └── yamnet.tflite
+├── database/
+└── README.md
+
+---
+
+## 🚀 Installation
+
+### Clone Repository
+
+```bash
+git clone <repository-url>
+cd SafeHer
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+### Backend
+
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+### ML Server
+
+```bash
+cd ml-server
+
+pip install -r requirements.txt
+
+python app.py
+```
+
+---
+
+## 🔧 Environment Variables
+
+### Frontend
+
+```env
+REACT_APP_API_URL=your_backend_url
+REACT_APP_ML_URL=your_ml_server_url
+```
+
+### Backend
+
+```env
+PORT=5000
+MONGO_URI=your_mongodb_uri
+JWT_SECRET=your_secret
+FRONTEND_URL=your_frontend_url
+```
+
+---
+
+## 🎯 Future Enhancements
+
+* SMS-based emergency alerts
+* Voice-command SOS activation
+* Fall detection using sensors
+* Emergency service integration
+* Offline emergency mode
+* Improved deep learning audio models
+
+---
+
+## 👨‍💻 Team
+
+Developed as a safety-focused intelligent assistance platform to provide faster emergency response and improve personal security through AI and real-time communication technologies.
+
+---
+
+## 📜 License
+
+This project is developed for educational and demonstration purposes.
