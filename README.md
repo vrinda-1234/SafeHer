@@ -47,26 +47,6 @@ The application continuously monitors safety conditions and can automatically tr
 
 ---
 
-## 🏗️ System Architecture
-
-Frontend (React)
-↓
-Backend (Node.js + Express)
-↓
-Socket.IO (Real-Time Communication)
-↓
-MongoDB (Database)
-
-AI Audio Service (Flask)
-↓
-YAMNet Feature Extraction
-↓
-Logistic Regression Classifier
-↓
-Distress Prediction
-
----
-
 ## 🛠️ Tech Stack
 
 ### Frontend
@@ -93,102 +73,6 @@ Distress Prediction
 * Logistic Regression
 * Librosa
 
-### Deployment
-
-* Vercel (Frontend)
-* Render / Hugging Face Spaces (Backend & ML Services)
-
----
-
-## 🤖 AI Pipeline
-
-1. Audio is captured from the user's device.
-2. Audio is processed using YAMNet.
-3. YAMNet generates high-dimensional embeddings.
-4. Embeddings are passed to a trained Logistic Regression classifier.
-5. Audio is classified into:
-
-* Safe
-* Suspicious
-* Distress
-
-6. If distress is detected, SafeHer can trigger emergency workflows automatically.
-
----
-
-## 📂 Project Structure
-
-SafeHer/
-├── frontend/
-├── backend/
-├── ml-server/
-│ ├── app.py
-│ ├── train_classifier.py
-│ ├── classifier.pkl
-│ ├── label_map.pkl
-│ └── yamnet.tflite
-├── database/
-└── README.md
-
----
-
-## 🚀 Installation
-
-### Clone Repository
-
-```bash
-git clone <repository-url>
-cd SafeHer
-```
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm start
-```
-
-### Backend
-
-```bash
-cd backend
-npm install
-npm run dev
-```
-
-### ML Server
-
-```bash
-cd ml-server
-
-pip install -r requirements.txt
-
-python app.py
-```
-
----
-
-## 🔧 Environment Variables
-
-### Frontend
-
-```env
-REACT_APP_API_URL=your_backend_url
-REACT_APP_ML_URL=your_ml_server_url
-```
-
-### Backend
-
-```env
-PORT=5000
-MONGO_URI=your_mongodb_uri
-JWT_SECRET=your_secret
-FRONTEND_URL=your_frontend_url
-```
-
----
-
 ## 🎯 Future Enhancements
 
 * SMS-based emergency alerts
@@ -200,12 +84,18 @@ FRONTEND_URL=your_frontend_url
 
 ---
 
-## 👨‍💻 Team
-
-Developed as a safety-focused intelligent assistance platform to provide faster emergency response and improve personal security through AI and real-time communication technologies.
-
----
-
 ## 📜 License
 
 This project is developed for educational and demonstration purposes.
+
+---
+
+<h2 align="center">🌸 SafeHer</h2>
+
+<h3 align="center">
+Made by Women, for Women ❤️
+</h3>
+
+<p align="center">
+Combining Artificial Intelligence, Real-Time Tracking, and Emergency Assistance to create a safer tomorrow.
+</p>
