@@ -24,7 +24,7 @@ router.put(
 );
 
 router.put(
-  "/password",
+  "/change-password",
   protect,
   changePassword
 );

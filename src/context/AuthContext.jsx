@@ -23,12 +23,12 @@ export const AuthProvider = ({ children }) => {
   }, []);
   const logout = async () => {
     try {
-      await API.post("/api/auth/logout"); // 🔥 backend clears cookie
+      await API.post("/api/auth/logout"); // backend clears cookie
     } catch (err) {
       console.log(err);
     }
 
-    setUser(null); // 🔥 frontend clears state
+    setUser(null); // frontend clears state
   };
   return (
     <AuthContext.Provider value={{ user, setUser, loading, logout }}>

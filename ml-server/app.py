@@ -33,7 +33,7 @@ def predict():
         file = request.files["file"]
 
         temp = tempfile.NamedTemporaryFile(delete=False, suffix=".webm")
-        temp.close() #abhilasha did changes here%
+        temp.close() 
         file.save(temp.name)
 
         waveform, sr = librosa.load(temp.name, sr=16000)

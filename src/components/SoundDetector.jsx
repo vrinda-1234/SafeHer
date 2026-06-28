@@ -264,7 +264,6 @@ const SoundDetector = () => {
 
   // ==========================
   // START MONITORING
-  // FIX: wrapped getUserMedia in try/catch to handle mic denial gracefully
   // ==========================
   const startMonitoring = async () => {
     activeRef.current = true;
@@ -287,7 +286,7 @@ const SoundDetector = () => {
     setRecording(true);
     streamRef.current = stream;
 
-    const mediaRecorder = new MediaRecorder(stream);
+    const mediaRecorder = new MediaRecorder(stream); //MediaRecorder is the browser API that actually records audio.
     mediaRecorderRef.current = mediaRecorder;
 
     mediaRecorder.ondataavailable = (e) => {

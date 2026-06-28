@@ -1,35 +1,18 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import logo from "../assests/logo.png"
+import logo from "../assests/logo.png";
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const { user, setUser } = useAuth(); // 🔥 REAL USER
+  const { user, logout } = useAuth(); //  REAL USER
 
   const [open, setOpen] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-
-  const [form, setForm] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
-    phone: user?.phone || "",
-  });
-
-  // 🔹 Handle input change
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  // 🔹 Save profile (frontend for now)
-  const handleSave = () => {
-    setUser(form); // update global user
-    setShowModal(false);
-  };
 
   // 🔹 Logout
-  const handleLogout = () => {
-    setUser(null); // clear user
+  const handleLogout = async () => {
+    setOpen(false);
+    await logout(); // clear user
     navigate("/");
   };
 
@@ -43,16 +26,10 @@ const Navbar = () => {
       {/* Navbar */}
       <div className="bg-white shadow px-6 py-4 flex justify-between items-center">
         <div className="flex items-center space-x-2">
-            <div className="flex items-center space-x-2">
-              <img src={logo} alt="SafeHer Logo" className="h-16 w-auto" />
-            </div>
+          <div className="flex items-center space-x-2">
+            <img src={logo} alt="SafeHer Logo" className="h-16 w-auto" />
+          </div>
         </div>
-        {/* <h1
-          className="text-xl font-bold text-blue-900 cursor-pointer"
-          onClick={() => navigate("/dashboard")}
-        >
-        Safeher
-        </h1> */}
 
         {/* Profile Icon */}
         <div className="relative">
@@ -66,7 +43,12 @@ const Navbar = () => {
           {/* Dropdown */}
           {open && (
             <div className="absolute right-0 mt-2 w-64 bg-white border rounded-lg shadow-lg p-4 z-50">
-              <p className="font-semibold font-syne text-blue-800">
+              <p
+                onClick={() => {
+                  setOpen(false);
+                }}
+                className="font-semibold font-syne text-blue-800"
+              >
                 {user?.name || "No Name"}
               </p>
 
@@ -74,21 +56,7 @@ const Navbar = () => {
                 {user?.email || "No Email"}
               </p>
 
-              <p className="text-sm font-inter text-gray-500 mt-1">
-                📞 {user?.phone || "N/A"}
-              </p>
-
               <hr className="my-3" />
-
-              {/* <button
-                onClick={() => {
-                  setShowModal(true);
-                  setOpen(false);
-                }}
-                className="block w-full text-left text-sm text-gray-700 hover:text-blue-700 mb-2"
-              >
-                Edit Profile
-              </button> */}
 
               <button
                 onClick={handleLogout}
@@ -100,60 +68,6 @@ const Navbar = () => {
           )}
         </div>
       </div>
-
-      {/* Edit Profile Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-xl shadow-lg w-96">
-            <h2 className="text-lg font-semibold text-blue-900 mb-4">
-              Edit Profile
-            </h2>
-
-            <input
-              type="text"
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              placeholder="Name"
-              className="w-full mb-3 p-2 border rounded"
-            />
-
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              placeholder="Email"
-              className="w-full mb-3 p-2 border rounded"
-            />
-
-            <input
-              type="text"
-              name="phone"
-              value={form.phone}
-              onChange={handleChange}
-              placeholder="Phone Number"
-              className="w-full mb-4 p-2 border rounded"
-            />
-
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 bg-gray-200 rounded"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={handleSave}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 };

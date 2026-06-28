@@ -197,7 +197,7 @@ const EmergencySOS = () => {
 
       const id = res.data.sosId;
       setSosId(id);
-      setTrackingLink(`${FRONTEND_URL}/public/track/${id}`);
+      setTrackingLink(`${FRONTEND_URL}/track/${id}`);
       startTracking(id);
       setStep("sent");
     } catch (err) {

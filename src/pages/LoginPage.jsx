@@ -30,7 +30,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setErrorMsg(""); // 🔥 clear error while typing
+    setErrorMsg(""); //  clear error while typing
 
     setFormData({
       ...formData,
@@ -80,7 +80,7 @@ const Login = () => {
           name="password"
         />
 
-        {/* 🔥 ERROR MESSAGE UI */}
+        {/*  ERROR MESSAGE UI */}
         {errorMsg && (
           <p className="text-red-600 text-sm text-center">{errorMsg}</p>
         )}
